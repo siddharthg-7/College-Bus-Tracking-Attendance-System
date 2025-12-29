@@ -1,5 +1,5 @@
 /**
- *  * Main Server File
+ * Main Server File
   * Integrates Express, Socket.IO, and all services
    */
 
