@@ -46,7 +46,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
+// API Routes (MUST come before static file serving)
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/driver', driverRoutes);
@@ -66,7 +66,12 @@ app.get('/api/health', (req, res) => {
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Serve index.html for all non-API routes (React Router)
-app.get('*', (req, res) => {
+// This MUST be after API routes to avoid catching API requests
+app.get('*', (req, res, next) => {
+    // Skip if it's an API request
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
