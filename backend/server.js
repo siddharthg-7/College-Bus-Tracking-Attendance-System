@@ -63,10 +63,14 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Handle React routing, return all requests to React app
+// Serve static files from frontend dist folder
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Serve index.html for all non-API routes (React Router)
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
+
 
 // Error handler (must be last)
 app.use(errorHandler);
