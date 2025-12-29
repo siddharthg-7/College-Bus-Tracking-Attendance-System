@@ -2,8 +2,12 @@
   "name": "real-time-bustracker",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "backend/server.js",
   "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "node backend/server.js",
+    "dev": "cd backend && npm run dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
