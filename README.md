@@ -1,4 +1,4 @@
-# 🚌 College Bus Tracking & Attendance System
+# College Bus Tracking & Attendance System
 
 [![Status](https://img.shields.io/badge/Status-100%25%20Complete-brightgreen.svg)]()
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-blue.svg)]()
@@ -10,31 +10,31 @@ A **production-grade, real-time bus tracking and attendance management system** 
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
-### 📍 Real-Time GPS Tracking
+###  Real-Time GPS Tracking
 *   **High Precision**: Live bus location updates via Socket.IO.
 *   **Active Monitoring**: Animated bus markers on an interactive Leaflet map.
 *   **Zero Latency**: Real-time communication between driver devices and student/admin dashboards.
 
-### 🔒 ETA-Based Attendance Lock
+### ETA-Based Attendance Lock
 *   **Smart Automation**: Students can only mark attendance if the bus is more than 10 minutes away from their stop.
 *   **Algorithmic Accuracy**: Uses **Dijkstra's Pathfinding** and **Haversine Distance** for precise ETA calculation.
 *   **Fraud Prevention**: Prevents students from marking attendance once the bus is too close.
 
-### 👥 Role-Based Dashboards
+###  Role-Based Dashboards
 *   **Student**: Track assigned bus, view ETA, confirm attendance, and manage notifications.
 *   **Driver**: Share live GPS, manage trip status (Start/End), and view student manifest per stop.
 *   **Admin**: System-wide monitoring, analytics, log management, and route/stop configuration.
 
-### 🔔 Smart Notification System
+###  Smart Notification System
 *   **Queue-Based**: Proprietary FIFO notification management.
 *   **Multi-Channel**: Browser push notifications + real-time WebSocket alerts.
 *   **Event-Driven**: Automated alerts for trip starts, delays, breakdowns, and attendance windows.
 
 ---
 
-## 🏗️ Technical Depth (DSA & Engineering)
+##  Technical Depth (DSA & Engineering)
 
 One of the project's core strengths is its heavy reliance on robust Data Structures and Algorithms implemented from scratch in JavaScript:
 
@@ -45,14 +45,14 @@ One of the project's core strengths is its heavy reliance on robust Data Structu
 | **Priority Queue** | Min-Heap | Optimizing Dijkstra's algorithm for sub-millisecond ETA calculations. |
 | **Queue** | FIFO Buffer | Managing sequential notification delivery and event processing. |
 
-### 🧠 Core Algorithms
+### Core Algorithms
 *   **Dijkstra’s Algorithm**: Shortest path calculation on weighted route graphs.
 *   **Haversine Distance**: Calculating spherical distance between GPS coordinates.
 *   **Attendance Lock Logic**: Dynamic thresholding based on real-time traffic and distance.
 
 ---
 
-## 🎨 Design Philosophy
+##  Design Philosophy
 
 The application features a **Premium Dark Mode** UI designed for high readability and professional aesthetics:
 *   **Visuals**: Glassmorphism, smooth CSS transitions, and micro-animations.
@@ -61,7 +61,7 @@ The application features a **Premium Dark Mode** UI designed for high readabilit
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```text
 .
@@ -83,7 +83,7 @@ The application features a **Premium Dark Mode** UI designed for high readabilit
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Prerequisites
 *   **Node.js** (v18 or higher)
@@ -114,14 +114,14 @@ npm run dev        # Start Vite dev server (Port 5173)
 
 ---
 
-## 🔒 Security & Performance
+##  Security & Performance
 *   **Authentication**: Stateless JWT-based auth with Role-Based Access Control (RBAC).
 *   **Security**: Password hashing via `bcrypt`, SQL injection prevention, and input validation.
 *   **Performance**: O(1) user lookups and cached ETA calculations for 500ms+ response times.
 
 ---
 
-## 📄 Documentation
+##  Documentation
 For more detailed information, please refer to the following:
 *   [Architecture Overview](./ARCHITECTURE.md)
 *   [Quickstart Guide](./QUICKSTART.md)
@@ -129,10 +129,10 @@ For more detailed information, please refer to the following:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
 
-## 📝 License
+##  License
 This project is licensed under the ISC License.
 
 ---
