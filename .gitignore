@@ -18,13 +18,6 @@ out/
 .env.production.local
 *.env*
 
-# Databases
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-
 # OS Files
 .DS_Store
 Thumbs.db
@@ -36,7 +29,6 @@ Thumbs.db
 *.swo
 
 # Project specific
-backend/database/bus_tracker.db
 backend/node_modules/
 frontend/node_modules/
 
