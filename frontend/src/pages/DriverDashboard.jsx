@@ -16,6 +16,7 @@ function DriverDashboard() {
     const [manifest, setManifest] = useState([]);
     const [loading, setLoading] = useState(true);
     const [tripActive, setTripActive] = useState(false);
+    const [endingTrip, setEndingTrip] = useState(false);
     const [currentLocation, setCurrentLocation] = useState(null);
     const [delayMinutes, setDelayMinutes] = useState(0);
     const [breakdownMessage, setBreakdownMessage] = useState('');
@@ -137,41 +138,68 @@ function DriverDashboard() {
     };
 
     const handleEndTrip = async () => {
-        console.log('handleEndTrip called');
+        console.log('🛑 End Trip button clicked');
 
-        // Use window.confirm with try-catch for better compatibility
-        try {
-            const confirmed = window.confirm('Are you sure you want to end this trip?');
-            console.log('Confirmation result:', confirmed);
-
-            if (!confirmed) {
-                console.log('User cancelled trip end');
-                return;
-            }
-        } catch (confirmError) {
-            console.error('Confirm dialog error:', confirmError);
-            // If confirm fails, proceed anyway (for testing/compatibility)
+        // Prevent double-clicks
+        if (endingTrip) {
+            console.log('⚠️ Already ending trip, please wait...');
+            return;
         }
 
-        console.log('Proceeding to end trip...');
+        // Show confirmation dialog
+        const confirmed = window.confirm(
+            '⚠️ END TRIP CONFIRMATION\n\n' +
+            'Are you sure you want to end this trip?\n\n' +
+            'This will:\n' +
+            '• Stop GPS tracking\n' +
+            '• Mark the trip as completed\n' +
+            '• Clear your current location\n\n' +
+            'Click OK to end the trip, or Cancel to continue.'
+        );
+
+        console.log('User confirmation:', confirmed);
+
+        if (!confirmed) {
+            console.log('❌ Trip end cancelled by user');
+            return;
+        }
+
+        console.log('✅ Proceeding to end trip...');
+        setEndingTrip(true);
 
         try {
+            console.log('📡 Sending POST request to /api/driver/trip/end');
             const response = await axios.post('/api/driver/trip/end');
-            console.log('End trip response:', response.data);
+            console.log('📥 End trip response:', response.data);
 
             if (response.data.success) {
+                console.log('✅ Trip ended successfully!');
                 setTripActive(false);
                 stopLocationTracking();
                 setCurrentLocation(null);
-                setGpsError(null); // Clear error on end
-                alert('Trip ended successfully!');
+                setGpsError(null);
+
+                alert('✅ Trip ended successfully!');
+
+                // Refresh dashboard data
                 await fetchDashboardData();
+                console.log('🔄 Dashboard data refreshed');
             } else {
+                console.error('❌ Backend returned success: false');
                 alert('Failed to end trip: ' + (response.data.message || 'Unknown error'));
             }
         } catch (error) {
-            console.error('End trip error:', error);
-            alert(error.response?.data?.message || 'Failed to end trip');
+            console.error('❌ End trip error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to end trip';
+            alert('❌ Error ending trip: ' + errorMessage);
+        } finally {
+            setEndingTrip(false);
         }
     };
 
@@ -347,9 +375,19 @@ function DriverDashboard() {
                                 type="button"
                                 className="btn btn-danger btn-large"
                                 onClick={handleEndTrip}
+                                disabled={endingTrip}
                             >
-                                <span>🛑</span>
-                                End Trip
+                                {endingTrip ? (
+                                    <>
+                                        <span className="spin">⏳</span>
+                                        Ending Trip...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>🛑</span>
+                                        End Trip
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>
