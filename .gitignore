@@ -31,6 +31,12 @@ Thumbs.db
 # Project specific
 backend/node_modules/
 frontend/node_modules/
+frontend/dist/
+
+# Database files
+backend/database/*.db
+backend/database/*.db-shm
+backend/database/*.db-wal
 
 
 
