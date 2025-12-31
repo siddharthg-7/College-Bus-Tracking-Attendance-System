@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function BusMap({ stops = [], busLocation = null, myStopId = null, height = '400px' }) {
+function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops = [], height = '400px' }) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const busMarkerRef = useRef(null);
@@ -68,6 +68,13 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, height = '400
             iconAnchor: [15, 30],
         });
 
+        const visitedStopIcon = L.divIcon({
+            className: 'custom-stop-marker visited-stop',
+            html: '<div class="stop-marker-inner">✅</div>',
+            iconSize: [35, 35],
+            iconAnchor: [17, 35],
+        });
+
         const myStopIcon = L.divIcon({
             className: 'custom-stop-marker my-stop',
             html: '<div class="stop-marker-inner">🏠</div>',
@@ -79,16 +86,32 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, height = '400
         const coordinates = [];
         stops.forEach(stop => {
             const isMyStop = stop.id === myStopId;
+            const isVisited = visitedStops.includes(stop.id);
+
+            // Priority: My Stop > Visited > Regular
+            let icon = stopIcon;
+            if (isMyStop) {
+                icon = myStopIcon;
+            } else if (isVisited) {
+                icon = visitedStopIcon;
+            }
+
             const marker = L.marker([stop.latitude, stop.longitude], {
-                icon: isMyStop ? myStopIcon : stopIcon
+                icon: icon
             }).addTo(map);
 
-            marker.bindPopup(`
+            let popupContent = `
         <div class="map-popup">
           <h4>${stop.name}</h4>
-          <p>${isMyStop ? '🏠 Your Stop' : 'Stop #' + stop.sequence_order}</p>
-        </div>
-      `);
+          <p>${isMyStop ? '🏠 Your Stop' : 'Stop #' + stop.sequence_order}</p>`;
+
+            if (isVisited) {
+                popupContent += `<p style="color: #10b981; font-weight: bold;">✅ Visited</p>`;
+            }
+
+            popupContent += `</div>`;
+
+            marker.bindPopup(popupContent);
 
             stopMarkersRef.current.push(marker);
             coordinates.push([stop.latitude, stop.longitude]);
@@ -108,7 +131,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, height = '400
             // Fit map to show all stops
             map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
         }
-    }, [stops, myStopId]);
+    }, [stops, myStopId, visitedStops]);
 
     // Update bus location
     useEffect(() => {

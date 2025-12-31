@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import AdminMap from '../components/AdminMap';
 import websocketService from '../services/websocket.service';
+import ThemeToggle from '../components/ThemeToggle';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -165,6 +166,7 @@ function AdminDashboard() {
                         <p className="dashboard-subtitle">System Overview & Management</p>
                     </div>
                     <div className="header-right">
+                        <ThemeToggle />
                         <button className="btn btn-secondary" onClick={logout}>
                             Logout
                         </button>

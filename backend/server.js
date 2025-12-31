@@ -15,6 +15,7 @@ const { getInstance } = require('./services/database.service');
 const attendanceLockService = require('./services/attendanceLock.service');
 const notificationService = require('./services/notification.service');
 const authService = require('./services/auth.service');
+const stopVerificationService = require('./services/stopVerification.service');
 
 // Middleware
 const errorHandler = require('./middleware/error.middleware');
@@ -162,12 +163,24 @@ io.on('connection', (socket) => {
                 [latitude, longitude, bus.id]
             );
 
+            // ✅ FEATURE 1: Check for stop visits (geofencing)
+            const newlyVisitedStops = stopVerificationService.checkStopVisits(
+                bus.trip_id,
+                bus.route_id,
+                latitude,
+                longitude
+            );
+
             // Calculate ETA and update attendance locks
             const stopsStatus = attendanceLockService.updateAttendanceLocks(
                 bus.trip_id,
                 bus.route_id,
                 { lat: latitude, lng: longitude }
             );
+
+            // Get all visited stops for this trip
+            const visitedStops = stopVerificationService.getVisitedStops(bus.trip_id);
+            const visitedStopIds = visitedStops.map(v => v.stopId);
 
             // Broadcast location to all clients watching this bus
             io.emit('receive-location', {
@@ -177,12 +190,22 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             });
 
-            // Broadcast ETA updates
+            // Broadcast ETA updates with visited stop information
             io.emit('eta-update', {
                 busId: bus.id,
                 routeId: bus.route_id,
-                stops: stopsStatus
+                stops: stopsStatus,
+                visitedStops: visitedStopIds // ✅ Include visited stops
             });
+
+            // Broadcast newly visited stops
+            if (newlyVisitedStops.length > 0) {
+                io.emit('stop-visited', {
+                    busId: bus.id,
+                    routeId: bus.route_id,
+                    stops: newlyVisitedStops
+                });
+            }
 
             // Check for newly locked stops and send notifications
             stopsStatus.forEach(stop => {

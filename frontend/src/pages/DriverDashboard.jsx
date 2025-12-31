@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import websocketService from '../services/websocket.service';
 import BusMap from '../components/BusMap';
+import ThemeToggle from '../components/ThemeToggle';
 import './DriverDashboard.css';
 
 function DriverDashboard() {
@@ -277,6 +278,7 @@ function DriverDashboard() {
                         <p className="dashboard-subtitle">Welcome, {driver.name}</p>
                     </div>
                     <div className="header-right">
+                        <ThemeToggle />
                         <div className="location-indicator" style={{ position: 'relative' }} title={gpsError}>
                             {currentLocation ? (
                                 <>

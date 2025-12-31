@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -45,6 +46,10 @@ function LoginPage() {
                 <div className="gradient-orb orb-1"></div>
                 <div className="gradient-orb orb-2"></div>
                 <div className="gradient-orb orb-3"></div>
+            </div>
+
+            <div className="theme-toggle-container">
+                <ThemeToggle />
             </div>
 
             <div className="login-container">

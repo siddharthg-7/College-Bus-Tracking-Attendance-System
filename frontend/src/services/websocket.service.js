@@ -74,6 +74,13 @@ class WebSocketService {
         }
     }
 
+    // ✅ Listen for stop visit events
+    onStopVisited(callback) {
+        if (this.socket) {
+            this.socket.on('stop-visited', callback);
+        }
+    }
+
     // Listen for notifications
     onNotification(callback) {
         if (this.socket) {

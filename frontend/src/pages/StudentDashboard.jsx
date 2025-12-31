@@ -9,6 +9,7 @@ import axios from 'axios';
 import websocketService from '../services/websocket.service';
 import BusMap from '../components/BusMap';
 import NotificationPanel from '../components/NotificationPanel';
+import ThemeToggle from '../components/ThemeToggle';
 import './StudentDashboard.css';
 
 function StudentDashboard() {
@@ -20,6 +21,7 @@ function StudentDashboard() {
     const [attendanceStatus, setAttendanceStatus] = useState('absent');
     const [isLocked, setIsLocked] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [visitedStops, setVisitedStops] = useState([]); // ✅ Track visited stops
 
     // Selection State
     const [availableRoutes, setAvailableRoutes] = useState([]);
@@ -80,19 +82,19 @@ function StudentDashboard() {
 
         // Listen for bus location updates
         websocketService.onLocationUpdate((data) => {
-            // Need to check current state or refs, but simplify: check if bus ID matches
-            // We can't easily access dashboardData from closure here if it changes, 
-            // but for simple cases:
             setBusLocation(prev => ({
                 latitude: data.latitude,
                 longitude: data.longitude
             }));
         });
 
-        // Listen for ETA updates
+        // Listen for ETA updates (includes visited stops)
         websocketService.onETAUpdate((data) => {
-            // We need current stop ID. 
-            // Ideally use a ref or dependency, but simple update:
+            // Update visited stops from ETA update
+            if (data.visitedStops) {
+                setVisitedStops(data.visitedStops);
+            }
+
             setDashboardData(currentData => {
                 if (currentData?.stop) {
                     const myStop = data.stops.find(s => s.stopId === currentData.stop.id);
@@ -103,6 +105,13 @@ function StudentDashboard() {
                 }
                 return currentData;
             });
+        });
+
+        // ✅ Listen for stop visit events
+        websocketService.onStopVisited((data) => {
+            console.log('Stop visited:', data);
+            const newStopIds = data.stops.map(s => s.stopId);
+            setVisitedStops(prev => [...new Set([...prev, ...newStopIds])]);
         });
 
         // Listen for notifications
@@ -298,6 +307,7 @@ function StudentDashboard() {
                         <p className="dashboard-subtitle">Welcome, {student.name}</p>
                     </div>
                     <div className="header-right">
+                        <ThemeToggle />
                         <button
                             className="btn-icon"
                             onClick={() => setShowNotifications(!showNotifications)}
@@ -430,6 +440,7 @@ function StudentDashboard() {
                         stops={routeStops}
                         busLocation={busLocation}
                         myStopId={stop.id}
+                        visitedStops={visitedStops}
                         height="500px"
                     />
                 </div>
