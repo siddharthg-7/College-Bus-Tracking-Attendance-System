@@ -100,12 +100,12 @@
 }
 
 /* ========================================
-   BUS MARKER - SMOOTH MOVEMENT
+   BUS MARKER - SMOOTH MOVEMENT WITH ROTATION
    ======================================== */
 .custom-bus-marker {
     background: transparent;
     border: none;
-    transition: transform 500ms linear;
+    /* Remove transition to prevent conflicts with LERP animation */
 }
 
 .bus-marker-inner {
@@ -122,11 +122,13 @@
     position: relative;
     z-index: 2;
     filter: drop-shadow(0 3px 8px rgba(37, 99, 235, 0.4));
-    transition: all var(--transition-base);
+    /* Smooth rotation transition - handled by JavaScript LERP */
+    transform-origin: center center;
+    will-change: transform;
+    /* Add subtle scale on hover only */
 }
 
 .custom-bus-marker:hover .bus-icon {
-    transform: scale(1.08);
     filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.6));
 }
 

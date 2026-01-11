@@ -11,6 +11,9 @@ import BusMap from '../components/BusMap';
 import ThemeToggle from '../components/ThemeToggle';
 import './DriverDashboard.css';
 
+// Optional: Uncomment for advanced GPS filtering and smoothing
+// import { GPSKalmanFilter, isValidGPSUpdate } from '../services/location.service';
+
 function DriverDashboard() {
     const { user, logout } = useAuth();
     const [dashboardData, setDashboardData] = useState(null);
@@ -23,6 +26,9 @@ function DriverDashboard() {
     const [breakdownMessage, setBreakdownMessage] = useState('');
     const [gpsError, setGpsError] = useState(null);
     const watchIdRef = useRef(null);
+
+    // Optional: Uncomment for GPS smoothing with Kalman filter
+    // const kalmanFilterRef = useRef(new GPSKalmanFilter());
 
     useEffect(() => {
         fetchDashboardData();
@@ -82,6 +88,23 @@ function DriverDashboard() {
             (position) => {
                 const { latitude, longitude } = position.coords;
                 console.log('📍 GPS Update:', latitude, longitude);
+
+                // Optional: Uncomment for GPS filtering and smoothing
+                // const newPosition = { latitude, longitude };
+                // 
+                // // Filter out unrealistic GPS jumps
+                // if (!isValidGPSUpdate(newPosition, currentLocation, 30, 3)) {
+                //     console.warn('Invalid GPS update filtered out');
+                //     return;
+                // }
+                // 
+                // // Apply Kalman filter for smoothing
+                // const smoothed = kalmanFilterRef.current.filter(latitude, longitude);
+                // setCurrentLocation(smoothed);
+                // setGpsError(null);
+                // websocketService.sendLocation(smoothed.latitude, smoothed.longitude);
+
+                // Default behavior (no filtering)
                 setCurrentLocation({ latitude, longitude });
                 setGpsError(null);
 
