@@ -3,7 +3,7 @@
  * Shows bus location, ETA, and attendance confirmation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import websocketService from '../services/websocket.service';
@@ -11,6 +11,9 @@ import BusMap from '../components/BusMap';
 import NotificationPanel from '../components/NotificationPanel';
 import ThemeToggle from '../components/ThemeToggle';
 import './StudentDashboard.css';
+
+// Advanced tracking features
+import { AdaptiveGeofence } from '../services/location.service';
 
 function StudentDashboard() {
     const { user, logout } = useAuth();
@@ -22,6 +25,10 @@ function StudentDashboard() {
     const [isLocked, setIsLocked] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [visitedStops, setVisitedStops] = useState([]); // ✅ Track visited stops
+
+    // Geofencing
+    const geofenceRef = useRef(null);
+    const [busDistance, setBusDistance] = useState(null);
 
     // Selection State
     const [availableRoutes, setAvailableRoutes] = useState([]);
@@ -134,6 +141,67 @@ function StudentDashboard() {
     useEffect(() => {
         requestNotificationPermission();
     }, []);
+
+    // Setup geofence when stop data is available
+    useEffect(() => {
+        if (dashboardData?.stop && dashboardData.hasSelection) {
+            const { stop } = dashboardData;
+
+            // Create geofence around student's stop (500m radius)
+            geofenceRef.current = new AdaptiveGeofence(
+                { latitude: stop.latitude, longitude: stop.longitude },
+                500  // 500 meters
+            );
+
+            // Register entry callback
+            geofenceRef.current.onEntry((data) => {
+                console.log(`🚌 Bus entered geofence! Distance: ${Math.round(data.distance)}m`);
+
+                // Show browser notification
+                if (Notification.permission === 'granted') {
+                    new Notification('🚌 Bus Approaching!', {
+                        body: `Your bus is ${Math.round(data.distance)} meters away from your stop`,
+                        icon: '🚌',
+                        tag: 'bus-proximity'
+                    });
+                }
+            });
+
+            // Register exit callback
+            geofenceRef.current.onExit((data) => {
+                console.log(`🚌 Bus left geofence! Distance: ${Math.round(data.distance)}m`);
+            });
+
+            // Adapt radius based on ETA
+            if (eta !== null && eta < 5) {
+                // Shrink radius when bus is very close
+                geofenceRef.current.adaptRadius(0.5);  // 250m
+            }
+        }
+
+        return () => {
+            if (geofenceRef.current) {
+                geofenceRef.current.reset();
+            }
+        };
+    }, [dashboardData, eta]);
+
+    // Monitor bus location with geofence
+    useEffect(() => {
+        if (busLocation && geofenceRef.current) {
+            const status = geofenceRef.current.checkPosition(
+                busLocation.latitude,
+                busLocation.longitude
+            );
+
+            setBusDistance(Math.round(status.distance));
+
+            if (status.isInside) {
+                console.log(`📍 Bus is ${Math.round(status.distance)}m from your stop`);
+            }
+        }
+    }, [busLocation]);
+
 
     // --- Selection Handlers ---
 
@@ -383,6 +451,11 @@ function StudentDashboard() {
                                     <span className="text-muted">--</span>
                                 )}
                             </p>
+                            {busDistance !== null && busLocation && (
+                                <p className="info-meta" style={{ color: busDistance < 500 ? '#10b981' : '#6b7280' }}>
+                                    📍 {busDistance}m away
+                                </p>
+                            )}
                             {isLocked && (
                                 <p className="info-meta text-error">⚠️ Attendance Locked</p>
                             )}

@@ -11,8 +11,12 @@ import BusMap from '../components/BusMap';
 import ThemeToggle from '../components/ThemeToggle';
 import './DriverDashboard.css';
 
-// Optional: Uncomment for advanced GPS filtering and smoothing
-// import { GPSKalmanFilter, isValidGPSUpdate } from '../services/location.service';
+// Advanced GPS tracking features
+import {
+    SensorFusionKalmanFilter,
+    calculateVelocityVector,
+    isValidGPSUpdate
+} from '../services/location.service';
 
 function DriverDashboard() {
     const { user, logout } = useAuth();
@@ -27,8 +31,10 @@ function DriverDashboard() {
     const [gpsError, setGpsError] = useState(null);
     const watchIdRef = useRef(null);
 
-    // Optional: Uncomment for GPS smoothing with Kalman filter
-    // const kalmanFilterRef = useRef(new GPSKalmanFilter());
+    // Advanced GPS tracking
+    const sensorFusionRef = useRef(new SensorFusionKalmanFilter());
+    const lastPositionRef = useRef(null);
+    const lastUpdateTimeRef = useRef(null);
 
     useEffect(() => {
         fetchDashboardData();
@@ -86,30 +92,61 @@ function DriverDashboard() {
 
         watchIdRef.current = navigator.geolocation.watchPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log('📍 GPS Update:', latitude, longitude);
+                const { latitude, longitude, accuracy } = position.coords;
+                const timestamp = Date.now();
 
-                // Optional: Uncomment for GPS filtering and smoothing
-                // const newPosition = { latitude, longitude };
-                // 
-                // // Filter out unrealistic GPS jumps
-                // if (!isValidGPSUpdate(newPosition, currentLocation, 30, 3)) {
-                //     console.warn('Invalid GPS update filtered out');
-                //     return;
-                // }
-                // 
-                // // Apply Kalman filter for smoothing
-                // const smoothed = kalmanFilterRef.current.filter(latitude, longitude);
-                // setCurrentLocation(smoothed);
-                // setGpsError(null);
-                // websocketService.sendLocation(smoothed.latitude, smoothed.longitude);
+                console.log('📍 GPS Update:', latitude, longitude, `(±${accuracy}m)`);
 
-                // Default behavior (no filtering)
-                setCurrentLocation({ latitude, longitude });
+                // Create new position object
+                const newPosition = {
+                    latitude,
+                    longitude,
+                    timestamp,
+                    accuracy
+                };
+
+                // 1. Validate GPS update (filter out errors)
+                const timeDelta = lastUpdateTimeRef.current ?
+                    (timestamp - lastUpdateTimeRef.current) / 1000 : 3;
+
+                if (lastPositionRef.current && !isValidGPSUpdate(
+                    newPosition,
+                    lastPositionRef.current,
+                    30,  // max speed: 30 m/s (108 km/h)
+                    timeDelta
+                )) {
+                    console.warn('⚠️ Invalid GPS update filtered out (unrealistic jump)');
+                    return;
+                }
+
+                // 2. Calculate velocity vector
+                let velocity = null;
+                if (lastPositionRef.current) {
+                    velocity = calculateVelocityVector(
+                        lastPositionRef.current,
+                        newPosition
+                    );
+                    console.log(`🚀 Speed: ${velocity.speed.toFixed(1)} m/s, Heading: ${velocity.heading.toFixed(0)}°`);
+                }
+
+                // 3. Apply sensor fusion (Kalman filter with velocity)
+                const smoothed = sensorFusionRef.current.filter(
+                    latitude,
+                    longitude,
+                    timestamp,
+                    velocity?.velocity
+                );
+
+                console.log('✨ Smoothed position:', smoothed.latitude.toFixed(6), smoothed.longitude.toFixed(6));
+
+                // 4. Update state and send to backend
+                setCurrentLocation(smoothed);
                 setGpsError(null);
+                websocketService.sendLocation(smoothed.latitude, smoothed.longitude);
 
-                // Send location via WebSocket
-                websocketService.sendLocation(latitude, longitude);
+                // 5. Store for next iteration
+                lastPositionRef.current = newPosition;
+                lastUpdateTimeRef.current = timestamp;
             },
             (error) => {
                 console.error('Geolocation error:', error);
