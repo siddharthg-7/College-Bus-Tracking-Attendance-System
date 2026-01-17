@@ -244,6 +244,172 @@ io.on('connection', (socket) => {
     });
 
     /**
+     * Heartbeat ping/pong to keep connection alive
+     */
+    socket.on('ping', () => {
+        socket.emit('pong');
+    });
+
+    /**
+     * Handle batch location upload (offline GPS points)
+     */
+    socket.on('send-location-batch', async (data) => {
+        try {
+            const connection = activeConnections.get(socket.id);
+
+            if (!connection || connection.role !== 'driver') {
+                return;
+            }
+
+            const { points } = data;
+
+            if (!Array.isArray(points) || points.length === 0) {
+                return;
+            }
+
+            console.log(`📦 Received ${points.length} offline GPS points from driver ${connection.userId}`);
+
+            // Get driver's bus
+            const bus = db.queryOne(
+                `SELECT b.id, b.route_id, t.id as trip_id
+                 FROM buses b
+                 LEFT JOIN trips t ON b.id = t.bus_id AND t.status = 'active'
+                 WHERE b.driver_id = ?`,
+                [connection.userId]
+            );
+
+            if (!bus || !bus.trip_id) {
+                return;
+            }
+
+            // Process each point (could be optimized with batch insert)
+            points.forEach(point => {
+                const { latitude, longitude, timestamp } = point;
+
+                // Update bus location with the latest point
+                db.execute(
+                    `UPDATE buses 
+                     SET current_lat = ?, current_lng = ?, last_updated = ?
+                     WHERE id = ?`,
+                    [latitude, longitude, new Date(timestamp).toISOString(), bus.id]
+                );
+            });
+
+            // Use the latest point for ETA calculation
+            const latestPoint = points[points.length - 1];
+            const stopsStatus = attendanceLockService.updateAttendanceLocks(
+                bus.trip_id,
+                bus.route_id,
+                { lat: latestPoint.latitude, lng: latestPoint.longitude }
+            );
+
+            // Broadcast the latest location
+            io.emit('receive-location', {
+                busId: bus.id,
+                latitude: latestPoint.latitude,
+                longitude: latestPoint.longitude,
+                timestamp: new Date(latestPoint.timestamp).toISOString()
+            });
+
+            // Broadcast ETA update
+            io.emit('eta-update', {
+                busId: bus.id,
+                routeId: bus.route_id,
+                stops: stopsStatus
+            });
+
+            console.log(`✅ Processed ${points.length} offline GPS points`);
+
+        } catch (error) {
+            console.error('Error processing batch location:', error);
+        }
+    });
+
+    /**
+     * Handle Emergency SOS
+     */
+    socket.on('emergency-sos', async (data) => {
+        try {
+            const connection = activeConnections.get(socket.id);
+
+            if (!connection || connection.role !== 'driver') {
+                return;
+            }
+
+            const { message, location, timestamp } = data;
+
+            console.log(`🚨 EMERGENCY SOS from driver ${connection.userId}: ${message}`);
+
+            // Get driver info
+            const driver = db.queryOne(
+                `SELECT u.id, u.name, b.bus_number, b.route_id, r.name as route_name
+                 FROM users u
+                 JOIN buses b ON b.driver_id = u.id
+                 JOIN routes r ON r.id = b.route_id
+                 WHERE u.id = ?`,
+                [connection.userId]
+            );
+
+            if (!driver) {
+                return;
+            }
+
+            // Create SOS notification in database
+            const sosData = {
+                driverId: driver.id,
+                driverName: driver.name,
+                busNumber: driver.bus_number,
+                routeName: driver.route_name,
+                message: message || 'Emergency assistance required',
+                latitude: location.latitude,
+                longitude: location.longitude,
+                timestamp: new Date(timestamp).toISOString()
+            };
+
+            // Broadcast SOS to ALL users (students, drivers, admins)
+            io.emit('sos-alert', sosData);
+
+            // Send notifications to all students on this route
+            const students = db.queryAll(
+                `SELECT DISTINCT u.id
+                 FROM users u
+                 JOIN student_stops ss ON ss.student_id = u.id
+                 JOIN stops s ON s.id = ss.stop_id
+                 WHERE s.route_id = ? AND u.role = 'student'`,
+                [driver.route_id]
+            );
+
+            students.forEach(student => {
+                notificationService.createNotification(
+                    student.id,
+                    '🚨 EMERGENCY ALERT',
+                    `Driver ${driver.name} (${driver.bus_number}) has sent an emergency SOS: ${sosData.message}`,
+                    'emergency'
+                );
+            });
+
+            // Notify all admins
+            const admins = db.queryAll(
+                `SELECT id FROM users WHERE role = 'admin'`
+            );
+
+            admins.forEach(admin => {
+                notificationService.createNotification(
+                    admin.id,
+                    '🚨 DRIVER EMERGENCY SOS',
+                    `Driver ${driver.name} (${driver.bus_number}, ${driver.route_name}) sent SOS: ${sosData.message}. Location: ${location.latitude}, ${location.longitude}`,
+                    'emergency'
+                );
+            });
+
+            console.log(`✅ SOS broadcasted to all users`);
+
+        } catch (error) {
+            console.error('Error processing SOS:', error);
+        }
+    });
+
+    /**
      * Handle disconnection
      */
     socket.on('disconnect', () => {
