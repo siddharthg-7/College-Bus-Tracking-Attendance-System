@@ -390,22 +390,68 @@ function DriverDashboard() {
             (error) => {
                 console.error('Geolocation error:', error);
                 let errorMessage = 'Unknown GPS error';
+                let helpText = '';
+
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        errorMessage = 'User denied the request for Geolocation. Please enable GPS.';
+                        errorMessage = '📍 GPS Permission Denied';
+                        helpText = `
+HOW TO FIX:
+1. Click the 🔒 lock icon in the address bar
+2. Find "Location" and change to "Allow"
+3. Reload the page (F5)
+
+OR in Chrome Settings:
+• Settings → Privacy → Site Settings → Location
+• Remove localhost:5173 from Block list
+
+Need help? See GPS_PERMISSION_GUIDE.md
+                        `.trim();
+
+                        // Show detailed alert
+                        alert(`${errorMessage}\n\n${helpText}`);
                         break;
+
                     case error.POSITION_UNAVAILABLE:
-                        errorMessage = 'Location information is unavailable.';
+                        errorMessage = '📍 GPS Signal Unavailable';
+                        helpText = `
+TROUBLESHOOTING:
+• Move to an open area (away from buildings)
+• Enable "High Accuracy" mode in phone settings
+• Wait 10-15 seconds for satellite lock
+• Check if airplane mode is OFF
+
+Desktop: Enable Location Services in Windows/Mac settings
+Mobile: Enable GPS in phone settings
+                        `.trim();
                         break;
+
                     case error.TIMEOUT:
-                        errorMessage = 'The request to get user location timed out.';
+                        errorMessage = '📍 GPS Timeout (10 seconds)';
+                        helpText = `
+TIPS:
+• GPS needs clear sky view
+• First fix can take 30-60 seconds
+• Move away from tall buildings
+• Ensure GPS is enabled on your device
+                        `.trim();
                         break;
+
                     case error.UNKNOWN_ERROR:
-                        errorMessage = 'An unknown error occurred.';
+                        errorMessage = '📍 Unknown GPS Error';
+                        helpText = `
+TRY:
+• Reload the page (F5)
+• Clear browser cache
+• Check browser console (F12) for details
+• Try a different browser
+                        `.trim();
                         break;
                 }
-                setGpsError(errorMessage);
-                // Don't alert constantly in watchPosition, just update UI
+
+                setGpsError(`${errorMessage}\n\n${helpText}`);
+                console.error(`❌ ${errorMessage}`);
+                console.log(helpText);
             },
             {
                 enableHighAccuracy: true,
@@ -676,9 +722,9 @@ function DriverDashboard() {
                                     🛰️ {satellitesUsed.length > 0 ? satellitesUsed.length : '?'} sats
                                 </span>
                                 <span className={`badge ${gpsQuality === 'excellent' ? 'badge-success' :
-                                        gpsQuality === 'good' ? 'badge-info' :
-                                            gpsQuality === 'fair' ? 'badge-warning' :
-                                                'badge-danger'
+                                    gpsQuality === 'good' ? 'badge-info' :
+                                        gpsQuality === 'fair' ? 'badge-warning' :
+                                            'badge-danger'
                                     }`} style={{ marginLeft: '5px', fontSize: '0.7em' }}>
                                     {gpsQuality}
                                 </span>
