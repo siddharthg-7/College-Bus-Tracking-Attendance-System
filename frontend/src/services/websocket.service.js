@@ -249,17 +249,31 @@ class WebSocketService {
     }
 
     /**
+     * Send a batch of location points (e.g. for offline sync or throttling)
+     */
+    sendLocationBatch(points) {
+        if (!Array.isArray(points) || points.length === 0) return;
+
+        if (this.socket?.connected) {
+            this.socket.emit('send-location-batch', { points });
+            console.log(`📤 Sent batch of ${points.length} points to server`);
+        } else {
+            console.warn('📦 Offline: Adding to existing offline batch');
+            this.offlineBatch = [...this.offlineBatch, ...points];
+            // Limit batch size
+            if (this.offlineBatch.length > this.maxBatchSize) {
+                this.offlineBatch = this.offlineBatch.slice(-this.maxBatchSize);
+            }
+        }
+    }
+
+    /**
      * Flush offline batch when connection is restored
      */
     flushOfflineBatch() {
         if (this.offlineBatch.length === 0) return;
-
-        console.log(`📤 Flushing ${this.offlineBatch.length} offline GPS points`);
-
-        if (this.socket?.connected) {
-            this.socket.emit('send-location-batch', { points: this.offlineBatch });
-            this.offlineBatch = [];
-        }
+        this.sendLocationBatch(this.offlineBatch);
+        this.offlineBatch = [];
     }
 
     /**

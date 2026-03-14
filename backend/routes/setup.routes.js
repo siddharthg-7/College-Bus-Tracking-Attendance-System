@@ -72,7 +72,7 @@ router.get('/status', async (req, res, next) => {
             success: false,
             data: {
                 databaseInitialized: false,
-                ready: false,
+                ready: false, 
                 error: error.message
             }
         });

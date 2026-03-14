@@ -168,6 +168,21 @@ db.exec(`
 
 console.log('✅ Created logs table');
 
+// Create Trip History table (for breadcrumbs and playback)
+db.exec(`
+    CREATE TABLE IF NOT EXISTS trip_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trip_id INTEGER NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        speed REAL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+    )
+`);
+
+console.log('✅ Created trip_history table');
+
 // Create indexes for better query performance
 db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -177,6 +192,8 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
     CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
     CREATE INDEX IF NOT EXISTS idx_trips_status ON trips(status);
+    CREATE INDEX IF NOT EXISTS idx_buses_location ON buses(current_lat, current_lng);
+    CREATE INDEX IF NOT EXISTS idx_history_trip ON trip_history(trip_id);
 `);
 
 console.log('✅ Created indexes');

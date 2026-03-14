@@ -245,217 +245,164 @@ function DriverDashboard() {
         setInterval(updateConnectionState, 5000);
     };
 
+    // Batching and Offline Buffering
+    const locationBufferRef = useRef([]); // Points collected but not sent
+    const offlineBufferRef = useRef([]);  // Points saved during disconnection
+    const BATCH_SEND_INTERVAL = 10000;    // Send batch every 10 seconds
+    const COLLECTION_INTERVAL = 1000;     // Collect point every 1 second
+    const lastCollectionTimeRef = useRef(0);
+    const flushTimerRef = useRef(null);
+
+    // Adaptive Frequency Constants
+    const STATIONARY_POLLING_RATE = 30000; // 30 seconds when stationary
+    const ADAPTIVE_THRESHOLD_KMH = 5;
+
+    // Load offline buffer from localStorage on mount
+    useEffect(() => {
+        const savedBuffer = localStorage.getItem('offline_gps_buffer');
+        if (savedBuffer) {
+            try {
+                offlineBufferRef.current = JSON.parse(savedBuffer);
+                console.log(`📦 Loaded ${offlineBufferRef.current.length} points from offline buffer`);
+                setConnectionState(prev => ({ ...prev, offlineBatchSize: offlineBufferRef.current.length }));
+            } catch (e) {
+                console.error('Failed to parse offline buffer');
+            }
+        }
+    }, []);
+
+    // Effect to handle batch flushing
+    useEffect(() => {
+        if (tripActive) {
+            flushTimerRef.current = setInterval(flushLocationBuffer, BATCH_SEND_INTERVAL);
+        } else {
+            if (flushTimerRef.current) clearInterval(flushTimerRef.current);
+        }
+        return () => {
+            if (flushTimerRef.current) clearInterval(flushTimerRef.current);
+        };
+    }, [tripActive, connectionState.connected]);
+
+    const flushLocationBuffer = () => {
+        if (!tripActive) return;
+
+        // 1. Handle regular buffer
+        if (locationBufferRef.current.length > 0) {
+            if (connectionState.connected) {
+                console.log(`📡 Sending batch of ${locationBufferRef.current.length} points to server...`);
+                websocketService.sendLocationBatch(locationBufferRef.current);
+                locationBufferRef.current = [];
+            } else {
+                // Not connected? Move to offline buffer
+                console.log(`🔌 Offline: Buffering ${locationBufferRef.current.length} points locally`);
+                offlineBufferRef.current = [...offlineBufferRef.current, ...locationBufferRef.current];
+                locationBufferRef.current = [];
+                saveOfflineBuffer();
+            }
+        }
+
+        // 2. Handle sync of offline buffer when reconnected
+        if (connectionState.connected && offlineBufferRef.current.length > 0) {
+            console.log(`🔄 Re-syncing ${offlineBufferRef.current.length} offline points...`);
+            websocketService.sendLocationBatch(offlineBufferRef.current);
+            offlineBufferRef.current = [];
+            saveOfflineBuffer();
+        }
+    };
+
+    const saveOfflineBuffer = () => {
+        localStorage.setItem('offline_gps_buffer', JSON.stringify(offlineBufferRef.current));
+        setConnectionState(prev => ({ ...prev, offlineBatchSize: offlineBufferRef.current.length }));
+    };
+
+    const handleGpsError = (error) => {
+        console.error('Geolocation error:', error);
+        let errorMessage = '📍 GPS Error';
+        let helpText = '';
+
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = '📍 GPS Permission Denied';
+                helpText = 'Clear browser location settings and reload.';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = '📍 GPS Signal Unavailable';
+                helpText = 'Move to an open area and check device GPS.';
+                break;
+            case error.TIMEOUT:
+                errorMessage = '📍 GPS Timeout';
+                helpText = 'GPS fix taking too long. Check sky view.';
+                break;
+        }
+
+        setGpsError(`${errorMessage}\n${helpText}`);
+    };
+
     const startLocationTracking = () => {
         setGpsError(null);
         if (!navigator.geolocation) {
-            const errorMsg = 'Geolocation is not supported by your browser';
-            setGpsError(errorMsg);
-            alert(errorMsg);
+            setGpsError('Geolocation not supported');
             return;
         }
 
-        console.log('📍 Starting location tracking...');
-
-        // Request Screen Wake Lock
         requestWakeLock();
 
         watchIdRef.current = navigator.geolocation.watchPosition(
-            (position) => {
+            async (position) => {
                 const { latitude, longitude, accuracy } = position.coords;
                 const timestamp = Date.now();
 
-                console.log('📍 GPS Update:', latitude, longitude, `(±${accuracy}m)`);
+                if (timestamp - lastCollectionTimeRef.current < COLLECTION_INTERVAL) return;
+                lastCollectionTimeRef.current = timestamp;
 
-                // Create new position object
-                const newPosition = {
-                    latitude,
-                    longitude,
-                    timestamp,
-                    accuracy
-                };
+                const speedKmh = (position.coords.speed || 0) * 3.6;
+                const isVerySlow = speedKmh < ADAPTIVE_THRESHOLD_KMH;
+                const newPosition = { latitude, longitude, timestamp, accuracy };
 
-                // 1. Validate GPS update (filter out errors)
-                const timeDelta = lastUpdateTimeRef.current ?
-                    (timestamp - lastUpdateTimeRef.current) / 1000 : 3;
+                const timeDelta = lastUpdateTimeRef.current ? (timestamp - lastUpdateTimeRef.current) / 1000 : 1;
+                if (lastPositionRef.current && !isValidGPSUpdate(newPosition, lastPositionRef.current, 30, timeDelta)) return;
 
-                if (lastPositionRef.current && !isValidGPSUpdate(
-                    newPosition,
-                    lastPositionRef.current,
-                    30,  // max speed: 30 m/s (108 km/h)
-                    timeDelta
-                )) {
-                    console.warn('⚠️ Invalid GPS update filtered out (unrealistic jump)');
+                if (lastPositionRef.current) {
+                    const velocity = calculateVelocityVector(lastPositionRef.current, newPosition);
+                    setCurrentSpeed(velocity.speed);
+                    setIsStationary(velocity.speed < STATIONARY_THRESHOLD);
+                }
+
+                if (isVerySlow && isStationary && (timestamp - lastUpdateTimeRef.current < STATIONARY_POLLING_RATE)) {
+                    lastPositionRef.current = newPosition;
                     return;
                 }
 
-                // 2. Calculate velocity vector
-                let velocity = null;
-                if (lastPositionRef.current) {
-                    velocity = calculateVelocityVector(
-                        lastPositionRef.current,
-                        newPosition
-                    );
-
-                    const speedMps = velocity.speed;
-                    setCurrentSpeed(speedMps);
-
-                    // Determine if stationary
-                    const wasStationary = isStationary;
-                    const nowStationary = speedMps < STATIONARY_THRESHOLD;
-                    setIsStationary(nowStationary);
-
-                    // Adaptive update frequency
-                    if (wasStationary !== nowStationary) {
-                        console.log(`🔄 Speed changed: ${nowStationary ? 'STATIONARY' : 'MOVING'} (${speedMps.toFixed(2)} m/s)`);
-                    }
-
-                    console.log(`🚀 Speed: ${velocity.speed.toFixed(1)} m/s (${(velocity.speed * 3.6).toFixed(1)} km/h), Heading: ${velocity.heading.toFixed(0)}°`);
-                }
-
-                // ========================================
-                // PROFESSIONAL GPS PIPELINE (Uber/Ola Standard)
-                // ========================================
-
-                // 3. Multi-GNSS Quality Assessment
-                if (gnssManagerRef.current) {
-                    const gnssData = gnssManagerRef.current.estimateGNSSUsed(accuracy);
-                    const quality = gnssManagerRef.current.assessQuality(accuracy);
-                    setSatellitesUsed(gnssData);
-                    setGpsQuality(quality);
-                    console.log(`🛰️ GNSS: ${gnssData.join(', ')} | Quality: ${quality}`);
-                }
-
-                // 4. IMU Sensor Fusion Update
-                if (imuSensorRef.current && kalmanFilterRef.current) {
-                    const imuState = imuSensorRef.current.getState();
-                    kalmanFilterRef.current.updateIMU(imuState);
-
-                    if (imuState.isMoving) {
-                        console.log(`� IMU: Moving, Heading: ${imuState.heading.toFixed(0)}°`);
-                    }
-                }
-
-                // 5. Enhanced Kalman Filter (GPS + IMU Integration)
-                let filtered = { latitude, longitude, timestamp };
+                let processed = newPosition;
                 if (kalmanFilterRef.current) {
-                    filtered = kalmanFilterRef.current.filterWithIMU(
-                        latitude,
-                        longitude,
-                        timestamp
-                    );
-                    console.log('✨ Kalman+IMU:', filtered.latitude.toFixed(6), filtered.longitude.toFixed(6));
-                } else {
-                    console.log('✨ Position:', latitude.toFixed(6), longitude.toFixed(6));
+                    const filtered = kalmanFilterRef.current.filterWithIMU(latitude, longitude, timestamp);
+                    processed = { ...processed, ...filtered };
                 }
 
-                // 6. Map Matching (Snap-to-Road) - Async
-                (async () => {
-                    let final = filtered;
-
-                    if (mapMatcherRef.current) {
-                        try {
-                            const snapped = await mapMatcherRef.current.snapToRoad(
-                                filtered.latitude,
-                                filtered.longitude
-                            );
-
-                            if (snapped.snapped) {
-                                final = snapped;
-                                setRoadName(snapped.roadName);
-                                console.log(`🗺️ Snapped: ${snapped.roadName}`);
-                            }
-                        } catch (error) {
-                            console.warn('⚠️ Map matching failed');
-                        }
+                try {
+                    const snapped = await mapMatcherRef.current.snapToRoad(processed.latitude, processed.longitude);
+                    if (snapped.snapped) {
+                        processed = { ...processed, ...snapped };
+                        setRoadName(snapped.roadName || '');
                     }
+                } catch (e) { /* fallback */ }
 
-                    // 7. Animation Queue (Smooth 60 FPS Movement)
-                    if (animationQueueRef.current) {
-                        animationQueueRef.current.enqueue(final);
-                        console.log('🎬 Queued for animation (2s buffer)');
-                    }
+                setCurrentLocation(processed);
+                
+                locationBufferRef.current.push({
+                    latitude: processed.latitude,
+                    longitude: processed.longitude,
+                    timestamp: processed.timestamp,
+                    speed: speedKmh
+                });
 
-                    // 8. Update State and Send to Backend
-                    setCurrentLocation(final);
-                    setGpsError(null);
-                    websocketService.sendLocation(final.latitude, final.longitude, timestamp);
-
-                    console.log('✅ Professional GPS pipeline complete');
-                })();
-
-                // Store for next iteration
                 lastPositionRef.current = newPosition;
                 lastUpdateTimeRef.current = timestamp;
             },
-            (error) => {
-                console.error('Geolocation error:', error);
-                let errorMessage = 'Unknown GPS error';
-                let helpText = '';
-
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = '📍 GPS Permission Denied';
-                        helpText = `
-HOW TO FIX:
-1. Click the 🔒 lock icon in the address bar
-2. Find "Location" and change to "Allow"
-3. Reload the page (F5)
-
-OR in Chrome Settings:
-• Settings → Privacy → Site Settings → Location
-• Remove localhost:5173 from Block list
-
-Need help? See GPS_PERMISSION_GUIDE.md
-                        `.trim();
-
-                        // Show detailed alert
-                        alert(`${errorMessage}\n\n${helpText}`);
-                        break;
-
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = '📍 GPS Signal Unavailable';
-                        helpText = `
-TROUBLESHOOTING:
-• Move to an open area (away from buildings)
-• Enable "High Accuracy" mode in phone settings
-• Wait 10-15 seconds for satellite lock
-• Check if airplane mode is OFF
-
-Desktop: Enable Location Services in Windows/Mac settings
-Mobile: Enable GPS in phone settings
-                        `.trim();
-                        break;
-
-                    case error.TIMEOUT:
-                        errorMessage = '📍 GPS Timeout (10 seconds)';
-                        helpText = `
-TIPS:
-• GPS needs clear sky view
-• First fix can take 30-60 seconds
-• Move away from tall buildings
-• Ensure GPS is enabled on your device
-                        `.trim();
-                        break;
-
-                    case error.UNKNOWN_ERROR:
-                        errorMessage = '📍 Unknown GPS Error';
-                        helpText = `
-TRY:
-• Reload the page (F5)
-• Clear browser cache
-• Check browser console (F12) for details
-• Try a different browser
-                        `.trim();
-                        break;
-                }
-
-                setGpsError(`${errorMessage}\n\n${helpText}`);
-                console.error(`❌ ${errorMessage}`);
-                console.log(helpText);
-            },
+            handleGpsError,
             {
                 enableHighAccuracy: true,
-                timeout: 10000, // Increased timeout to 10s
+                timeout: 10000,
                 maximumAge: 0
             }
         );

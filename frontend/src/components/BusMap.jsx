@@ -56,6 +56,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
     const busMarkerRef = useRef(null);
     const routeLineRef = useRef(null);
     const stopMarkersRef = useRef([]);
+    const lastRouteIdRef = useRef(null);
 
     // Animation state
     const animationRef = useRef(null);
@@ -69,11 +70,19 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
     // Animation duration in milliseconds (smooth transition over 1 second)
     const ANIMATION_DURATION = 1000;
 
+    const [isZoomLocked, setIsZoomLocked] = useState(true);
+    const hasInitializedRef = useRef(false);
+    const lastUpdateReceivedRef = useRef(0);
+    const MIN_UPDATE_INTERVAL = 1000; // Minimum time between UI updates in ms
+
     useEffect(() => {
         if (!mapRef.current || mapInstanceRef.current) return;
 
-        // Initialize map
-        const map = L.map(mapRef.current).setView([28.6139, 77.2090], 13);
+        // Initialize map with a default view
+        const map = L.map(mapRef.current, {
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([17.4124, 78.3970], 13); // Default to GNITS area
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
@@ -82,8 +91,16 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
 
         mapInstanceRef.current = map;
 
+        // Listen for manual zoom/pan
+        map.on('zoomend', () => {
+            // Keep track of zoom if we ever need to re-setView
+        });
+
+        map.on('moveend', () => {
+            // User moved map manually
+        });
+
         return () => {
-            // Cleanup animation frame
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
@@ -138,7 +155,6 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             const isMyStop = stop.id === myStopId;
             const isVisited = visitedStops.includes(stop.id);
 
-            // Priority: My Stop > Visited > Regular
             let icon = stopIcon;
             if (isMyStop) {
                 icon = myStopIcon;
@@ -160,28 +176,57 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             }
 
             popupContent += `</div>`;
-
             marker.bindPopup(popupContent);
 
             stopMarkersRef.current.push(marker);
             coordinates.push([stop.latitude, stop.longitude]);
         });
 
+        const currentRouteId = stops.length > 0 ? stops[0].route_id || stops[0].routeId : null;
+        const lastRouteId = lastRouteIdRef.current;
+        
         // Draw route line
         if (coordinates.length > 1) {
             const routeLine = L.polyline(coordinates, {
                 color: '#6366f1',
-                weight: 4,
-                opacity: 0.7,
+                weight: 5,
+                opacity: 0.6,
                 smoothFactor: 1
             }).addTo(map);
 
             routeLineRef.current = routeLine;
 
-            // Fit map to show all stops
-            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            // Fit bounds if route ID changed or first load
+            if (!hasInitializedRef.current || currentRouteId !== lastRouteId) {
+                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                hasInitializedRef.current = true;
+                lastRouteIdRef.current = currentRouteId;
+            }
         }
-    }, [stops, myStopId, visitedStops]);
+    }, [stops]);
+
+    // Separate effect for visited stops to avoid refitting bounds
+    useEffect(() => {
+        if (!mapInstanceRef.current || !stops.length) return;
+        // Update marker icons without re-fitting bounds
+        stopMarkersRef.current.forEach((marker, index) => {
+            const stop = stops[index];
+            if (!stop) return;
+            
+            const isMyStop = stop.id === myStopId;
+            const isVisited = visitedStops.includes(stop.id);
+            
+            if (isVisited && !marker.getElement()?.classList.contains('visited-stop')) {
+                const visitedStopIcon = L.divIcon({
+                    className: 'custom-stop-marker visited-stop',
+                    html: '<div class="stop-marker-inner">✅</div>',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 35],
+                });
+                marker.setIcon(visitedStopIcon);
+            }
+        });
+    }, [visitedStops, myStopId, stops]);
 
     // Animate bus marker smoothly using LERP
     const animateBusMarker = (timestamp) => {
@@ -192,11 +237,10 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
         const elapsed = timestamp - animationStartTimeRef.current;
         const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
 
-        // Easing function for smoother animation (ease-out)
+        // Cubic easing for premium feel
         const easeProgress = 1 - Math.pow(1 - progress, 3);
 
         if (currentPositionRef.current && targetPositionRef.current) {
-            // Interpolate position
             const newLat = lerp(
                 currentPositionRef.current.latitude,
                 targetPositionRef.current.latitude,
@@ -208,19 +252,14 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 easeProgress
             );
 
-            // Interpolate bearing for smooth rotation
             let bearingDiff = targetBearingRef.current - currentBearingRef.current;
-            // Handle wrap-around (e.g., 350° to 10°)
             if (bearingDiff > 180) bearingDiff -= 360;
             if (bearingDiff < -180) bearingDiff += 360;
 
             const newBearing = currentBearingRef.current + bearingDiff * easeProgress;
 
-            // Update marker position and rotation
             if (busMarkerRef.current) {
                 busMarkerRef.current.setLatLng([newLat, newLng]);
-
-                // Update rotation
                 const markerElement = busMarkerRef.current.getElement();
                 if (markerElement) {
                     const busIconElement = markerElement.querySelector('.bus-icon');
@@ -230,21 +269,26 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 }
             }
 
-            // Continue animation if not complete
             if (progress < 1) {
                 animationRef.current = requestAnimationFrame(animateBusMarker);
             } else {
-                // Animation complete - update current position to last GPS position
-                currentPositionRef.current = lastGPSPositionRef.current ? { ...lastGPSPositionRef.current } : { ...targetPositionRef.current };
+                currentPositionRef.current = { ...targetPositionRef.current };
                 currentBearingRef.current = targetBearingRef.current;
                 animationStartTimeRef.current = null;
             }
         }
     };
 
-    // Update bus location with smooth animation
+    // Update bus location with smooth animation and viewport control
     useEffect(() => {
         if (!mapInstanceRef.current || !busLocation) return;
+
+        const now = Date.now();
+        // Throttle updates to avoid jumpy UI from frequent backend spikes
+        if (now - lastUpdateReceivedRef.current < MIN_UPDATE_INTERVAL && lastUpdateReceivedRef.current !== 0) {
+            return;
+        }
+        lastUpdateReceivedRef.current = now;
 
         const map = mapInstanceRef.current;
         const newPosition = {
@@ -252,14 +296,13 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             longitude: busLocation.longitude
         };
 
-        // Initialize or update bus marker
         if (!busMarkerRef.current) {
-            // First time - create marker without animation
+            // ... (setup bus marker)
             const busIcon = L.divIcon({
                 className: 'custom-bus-marker',
                 html: `
                 <div class="bus-marker-inner">
-                  <div class="bus-icon" style="transform: rotate(0deg); transition: transform 0.3s ease;">🚌</div>
+                  <div class="bus-icon" style="transform: rotate(0deg);">🚌</div>
                   <div class="bus-pulse"></div>
                 </div>
               `,
@@ -267,63 +310,92 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 iconAnchor: [25, 25],
             });
 
-            const busMarker = L.marker([newPosition.latitude, newPosition.longitude], {
-                icon: busIcon
+            busMarkerRef.current = L.marker([newPosition.latitude, newPosition.longitude], {
+                icon: busIcon,
+                zIndexOffset: 1000
             }).addTo(map);
 
-            busMarker.bindPopup(`
-              <div class="map-popup">
-                <h4>🚌 Bus Location</h4>
-                <p>Live tracking active</p>
-              </div>
-            `);
-
-            busMarkerRef.current = busMarker;
             currentPositionRef.current = newPosition;
             targetPositionRef.current = newPosition;
-            lastGPSPositionRef.current = newPosition; // Store first GPS position
+            map.setView([newPosition.latitude, newPosition.longitude], map.getZoom());
         } else {
-            // Store the new GPS position as last confirmed position
-            lastGPSPositionRef.current = newPosition;
+            // Calculate dynamic duration based on update interval
+            // Using 90% of the last interval to ensure we finish before next update
+            let dynamicDuration = now - lastUpdateReceivedRef.current;
+            if (dynamicDuration < 1000) dynamicDuration = 1000;
+            if (dynamicDuration > 15000) dynamicDuration = 5000; // Cap at 15s, fallback to 5s if very long gap
 
-            // Subsequent updates - animate smoothly
-            // Use current animated position (or last GPS if no animation) as start
-            const startPosition = currentPositionRef.current || lastGPSPositionRef.current;
+            const startPos = busMarkerRef.current.getLatLng();
+            currentPositionRef.current = {
+                latitude: startPos.lat,
+                longitude: startPos.lng
+            };
+            
+            targetPositionRef.current = newPosition;
+            targetBearingRef.current = calculateBearing(currentPositionRef.current, newPosition);
 
-            if (startPosition) {
-                // Calculate bearing from current position to new GPS position
-                const bearing = calculateBearing(startPosition, newPosition);
-                targetBearingRef.current = bearing;
+            // Update constant for this animation segment
+            // We'll use a local variable instead of the constant to avoid re-renders
+            const segmentDuration = dynamicDuration;
 
-                // Set target position to new GPS position
-                targetPositionRef.current = newPosition;
+            // Updated animation function with local segmentDuration
+            const animateSegment = (timestamp) => {
+                if (!animationStartTimeRef.current) animationStartTimeRef.current = timestamp;
+                const elapsed = timestamp - animationStartTimeRef.current;
+                const progress = Math.min(elapsed / segmentDuration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-                // If no current position, set it to start position
-                if (!currentPositionRef.current) {
-                    currentPositionRef.current = startPosition;
+                if (currentPositionRef.current && targetPositionRef.current) {
+                    const newLat = lerp(currentPositionRef.current.latitude, targetPositionRef.current.latitude, easeProgress);
+                    const newLng = lerp(currentPositionRef.current.longitude, targetPositionRef.current.longitude, easeProgress);
+                    
+                    let bearingDiff = targetBearingRef.current - currentBearingRef.current;
+                    if (bearingDiff > 180) bearingDiff -= 360;
+                    if (bearingDiff < -180) bearingDiff += 360;
+                    const newBearing = currentBearingRef.current + bearingDiff * easeProgress;
+
+                    if (busMarkerRef.current) {
+                        busMarkerRef.current.setLatLng([newLat, newLng]);
+                        const markerElement = busMarkerRef.current.getElement();
+                        if (markerElement) {
+                            const busIconElement = markerElement.querySelector('.bus-icon');
+                            if (busIconElement) busIconElement.style.transform = `rotate(${newBearing}deg)`;
+                        }
+                    }
+
+                    if (progress < 1) {
+                        animationRef.current = requestAnimationFrame(animateSegment);
+                    } else {
+                        currentPositionRef.current = { ...targetPositionRef.current };
+                        currentBearingRef.current = targetBearingRef.current;
+                        animationStartTimeRef.current = null;
+                    }
                 }
+            };
 
-                // Cancel any ongoing animation
-                if (animationRef.current) {
-                    cancelAnimationFrame(animationRef.current);
-                }
-
-                // Start new animation from current position to new GPS position
-                animationStartTimeRef.current = null;
-                animationRef.current = requestAnimationFrame(animateBusMarker);
-            } else {
-                // Fallback: just update position directly
-                busMarkerRef.current.setLatLng([newPosition.latitude, newPosition.longitude]);
-                currentPositionRef.current = newPosition;
-                targetPositionRef.current = newPosition;
-            }
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            animationStartTimeRef.current = null;
+            animationRef.current = requestAnimationFrame(animateSegment);
         }
 
-        // Optional: Smoothly pan map to follow bus (uncomment if desired)
-        // map.panTo([newPosition.latitude, newPosition.longitude], {
-        //     animate: true,
-        //     duration: 0.5
-        // });
+        // Viewport Control: Only pan if marker is out of bounds or near edge
+        const bounds = map.getBounds();
+        const buffer = 0.1; // 10% buffer from edges
+        const latRange = bounds.getNorth() - bounds.getSouth();
+        const lngRange = bounds.getEast() - bounds.getWest();
+        
+        const innerBounds = L.latLngBounds(
+            [bounds.getSouth() + latRange * buffer, bounds.getWest() + lngRange * buffer],
+            [bounds.getNorth() - latRange * buffer, bounds.getEast() - lngRange * buffer]
+        );
+
+        if (!innerBounds.contains([newPosition.latitude, newPosition.longitude])) {
+            map.panTo([newPosition.latitude, newPosition.longitude], {
+                animate: true,
+                duration: 1.5 // Smooth slow pan
+            });
+        }
+
 
     }, [busLocation]);
 
@@ -343,6 +415,42 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 className="bus-map"
                 style={{ height, width: '100%', borderRadius: 'var(--radius-lg)' }}
             />
+            
+            {/* Map Controls Overlay */}
+            <div className="map-controls">
+                <button 
+                    className={`map-control-btn ${isZoomLocked ? 'active' : ''}`}
+                    onClick={() => setIsZoomLocked(!isZoomLocked)}
+                    title={isZoomLocked ? "Unlock Auto-Follow" : "Lock Auto-Follow"}
+                >
+                    {isZoomLocked ? '🔒 Locked' : '🔓 Unlocked'}
+                </button>
+                <button 
+                    className="map-control-btn"
+                    onClick={() => {
+                        if (mapInstanceRef.current && routeLineRef.current) {
+                            mapInstanceRef.current.fitBounds(routeLineRef.current.getBounds(), { padding: [50, 50] });
+                        }
+                    }}
+                    title="Fit Route"
+                >
+                    🔍 Fit Route
+                </button>
+                {busLocation && (
+                    <button 
+                        className="map-control-btn"
+                        onClick={() => {
+                            if (mapInstanceRef.current) {
+                                mapInstanceRef.current.panTo([busLocation.latitude, busLocation.longitude], { animate: true });
+                            }
+                        }}
+                        title="Recenter on Bus"
+                    >
+                        🚌 Recenter
+                    </button>
+                )}
+            </div>
+
             {!busLocation && (
                 <div className="map-overlay">
                     <p>🚌 Waiting for bus to start trip...</p>

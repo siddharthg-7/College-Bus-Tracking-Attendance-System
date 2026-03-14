@@ -105,7 +105,6 @@
 .custom-bus-marker {
     background: transparent;
     border: none;
-    /* Remove transition to prevent conflicts with LERP animation */
 }
 
 .bus-marker-inner {
@@ -122,10 +121,8 @@
     position: relative;
     z-index: 2;
     filter: drop-shadow(0 3px 8px rgba(37, 99, 235, 0.4));
-    /* Smooth rotation transition - handled by JavaScript LERP */
     transform-origin: center center;
     will-change: transform;
-    /* Add subtle scale on hover only */
 }
 
 .custom-bus-marker:hover .bus-icon {
@@ -192,14 +189,50 @@
 }
 
 /* ========================================
-   ROUTE LINE - PROGRESSIVE DRAW
+   MAP CONTROLS OVERLAY
    ======================================== */
-.leaflet-interactive {
-    transition: stroke-width var(--transition-fast);
+.map-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
 }
 
-.leaflet-interactive:hover {
-    stroke-width: 6 !important;
+.map-control-btn {
+    background: var(--card);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 15px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+}
+
+.map-control-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.map-control-btn:active {
+    transform: translateY(0);
+}
+
+.map-control-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
 }
 
 /* ========================================
@@ -212,14 +245,6 @@
 
     .stop-marker-inner {
         font-size: 1.3rem;
-    }
-
-    .visited-stop .stop-marker-inner {
-        font-size: 1.4rem;
-    }
-
-    .my-stop .stop-marker-inner {
-        font-size: 1.6rem;
     }
 
     .bus-icon {
@@ -238,10 +263,5 @@
     .bus-pulse,
     .visited-stop .stop-marker-inner {
         animation: none;
-    }
-
-    .stop-marker-inner,
-    .bus-icon {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
 }

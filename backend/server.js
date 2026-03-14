@@ -135,12 +135,9 @@ io.on('connection', (socket) => {
     socket.on('send-location', async (data) => {
         try {
             const connection = activeConnections.get(socket.id);
+            if (!connection || connection.role !== 'driver') return;
 
-            if (!connection || connection.role !== 'driver') {
-                return;
-            }
-
-            const { latitude, longitude } = data;
+            const { latitude, longitude, speed } = data;
 
             // Get driver's bus and active trip
             const bus = db.queryOne(
@@ -151,74 +148,25 @@ io.on('connection', (socket) => {
                 [connection.userId]
             );
 
-            if (!bus || !bus.trip_id) {
-                return;
-            }
+            if (!bus || !bus.trip_id) return;
 
-            // Update bus location in database
+            // Update live location
             db.execute(
-                `UPDATE buses 
-                 SET current_lat = ?, current_lng = ?, last_updated = CURRENT_TIMESTAMP
-                 WHERE id = ?`,
+                `UPDATE buses SET current_lat = ?, current_lng = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?`,
                 [latitude, longitude, bus.id]
             );
 
-            // ✅ FEATURE 1: Check for stop visits (geofencing)
-            const newlyVisitedStops = stopVerificationService.checkStopVisits(
-                bus.trip_id,
-                bus.route_id,
-                latitude,
-                longitude
+            // Log to history
+            db.execute(
+                `INSERT INTO trip_history (trip_id, latitude, longitude, speed) VALUES (?, ?, ?, ?)`,
+                [bus.trip_id, latitude, longitude, speed || 0]
             );
 
-            // Calculate ETA and update attendance locks
-            const stopsStatus = attendanceLockService.updateAttendanceLocks(
-                bus.trip_id,
-                bus.route_id,
-                { lat: latitude, lng: longitude }
-            );
-
-            // Get all visited stops for this trip
-            const visitedStops = stopVerificationService.getVisitedStops(bus.trip_id);
-            const visitedStopIds = visitedStops.map(v => v.stopId);
-
-            // Broadcast location to all clients watching this bus
-            io.emit('receive-location', {
-                busId: bus.id,
-                latitude,
-                longitude,
-                timestamp: new Date().toISOString()
-            });
-
-            // Broadcast ETA updates with visited stop information
-            io.emit('eta-update', {
-                busId: bus.id,
-                routeId: bus.route_id,
-                stops: stopsStatus,
-                visitedStops: visitedStopIds // ✅ Include visited stops
-            });
-
-            // Broadcast newly visited stops
-            if (newlyVisitedStops.length > 0) {
-                io.emit('stop-visited', {
-                    busId: bus.id,
-                    routeId: bus.route_id,
-                    stops: newlyVisitedStops
-                });
-            }
-
-            // Check for newly locked stops and send notifications
-            stopsStatus.forEach(stop => {
-                if (stop.isLocked && stop.eta <= 10 && stop.eta > 8) {
-                    // Send notification when ETA is between 8-10 minutes (lock threshold)
-                    notificationService.notifyBusArrival(stop.stopId, stop.eta);
-                }
-
-                if (stop.isLocked && stop.eta <= 10 && stop.eta > 9) {
-                    // Send lock notification
-                    notificationService.notifyAttendanceLock(stop.stopId);
-                }
-            });
+            // Broadcast updates
+            const stopsStatus = attendanceLockService.updateAttendanceLocks(bus.trip_id, bus.route_id, { lat: latitude, lng: longitude });
+            
+            io.emit('receive-location', { busId: bus.id, latitude, longitude, timestamp: new Date().toISOString() });
+            io.emit('eta-update', { busId: bus.id, routeId: bus.route_id, stops: stopsStatus });
 
         } catch (error) {
             console.error('Error processing location:', error);
@@ -251,74 +199,49 @@ io.on('connection', (socket) => {
     });
 
     /**
-     * Handle batch location upload (offline GPS points)
+     * Handle batch location upload (offline/throttled GPS points)
      */
     socket.on('send-location-batch', async (data) => {
         try {
             const connection = activeConnections.get(socket.id);
-
-            if (!connection || connection.role !== 'driver') {
-                return;
-            }
+            if (!connection || connection.role !== 'driver') return;
 
             const { points } = data;
+            if (!Array.isArray(points) || points.length === 0) return;
 
-            if (!Array.isArray(points) || points.length === 0) {
-                return;
-            }
-
-            console.log(`📦 Received ${points.length} offline GPS points from driver ${connection.userId}`);
-
-            // Get driver's bus
             const bus = db.queryOne(
-                `SELECT b.id, b.route_id, t.id as trip_id
-                 FROM buses b
+                `SELECT b.id, b.route_id, t.id as trip_id FROM buses b 
                  LEFT JOIN trips t ON b.id = t.bus_id AND t.status = 'active'
                  WHERE b.driver_id = ?`,
                 [connection.userId]
             );
 
-            if (!bus || !bus.trip_id) {
-                return;
-            }
+            if (!bus || !bus.trip_id) return;
 
-            // Process each point (could be optimized with batch insert)
-            points.forEach(point => {
-                const { latitude, longitude, timestamp } = point;
+            console.log(`📦 Batch Processing: ${points.length} points from Driver ${connection.userId}`);
 
-                // Update bus location with the latest point
-                db.execute(
-                    `UPDATE buses 
-                     SET current_lat = ?, current_lng = ?, last_updated = ?
-                     WHERE id = ?`,
-                    [latitude, longitude, new Date(timestamp).toISOString(), bus.id]
-                );
-            });
+            // Use transaction for efficient batch history insertion
+            db.transaction(() => {
+                for (const point of points) {
+                    db.execute(
+                        `INSERT INTO trip_history (trip_id, latitude, longitude, speed, timestamp) VALUES (?, ?, ?, ?, ?)`,
+                        [bus.trip_id, point.latitude, point.longitude, point.speed || 0, new Date(point.timestamp).toISOString()]
+                    );
+                }
+            })();
 
-            // Use the latest point for ETA calculation
-            const latestPoint = points[points.length - 1];
-            const stopsStatus = attendanceLockService.updateAttendanceLocks(
-                bus.trip_id,
-                bus.route_id,
-                { lat: latestPoint.latitude, lng: latestPoint.longitude }
+            // Update live location with the MOST RECENT point in the batch
+            const latest = points[points.length - 1];
+            db.execute(
+                `UPDATE buses SET current_lat = ?, current_lng = ?, last_updated = ? WHERE id = ?`,
+                [latest.latitude, latest.longitude, new Date(latest.timestamp).toISOString(), bus.id]
             );
 
-            // Broadcast the latest location
-            io.emit('receive-location', {
-                busId: bus.id,
-                latitude: latestPoint.latitude,
-                longitude: latestPoint.longitude,
-                timestamp: new Date(latestPoint.timestamp).toISOString()
-            });
-
-            // Broadcast ETA update
-            io.emit('eta-update', {
-                busId: bus.id,
-                routeId: bus.route_id,
-                stops: stopsStatus
-            });
-
-            console.log(`✅ Processed ${points.length} offline GPS points`);
+            // Broadcast the latest state for live tracking
+            const stopsStatus = attendanceLockService.updateAttendanceLocks(bus.trip_id, bus.route_id, { lat: latest.latitude, lng: latest.longitude });
+            
+            io.emit('receive-location', { busId: bus.id, latitude: latest.latitude, longitude: latest.longitude, timestamp: new Date(latest.timestamp).toISOString() });
+            io.emit('eta-update', { busId: bus.id, routeId: bus.route_id, stops: stopsStatus });
 
         } catch (error) {
             console.error('Error processing batch location:', error);

@@ -28,7 +28,6 @@ const insertUser = db.prepare(`
 insertUser.run('admin', hashedPassword, 'admin', 'Admin User', 'admin@college.edu', '9876543210');
 
 // Driver users
-// We need enough drivers for the 5 routes
 insertUser.run('driver1', hashedPassword, 'driver', 'Rajesh Kumar', 'rajesh@college.edu', '9876543211');
 insertUser.run('driver2', hashedPassword, 'driver', 'Suresh Sharma', 'suresh@college.edu', '9876543212');
 insertUser.run('driver3', hashedPassword, 'driver', 'Ramesh Gupta', 'ramesh@college.edu', '9876543213'); // Route 23K
@@ -36,7 +35,6 @@ insertUser.run('driver4', hashedPassword, 'driver', 'Mahesh Babu', 'mahesh@colle
 insertUser.run('driver5', hashedPassword, 'driver', 'Naresh Reddy', 'naresh@college.edu', '9876543215'); // Route 7D
 
 // Student users
-// Creating students for testing different routes
 insertUser.run('student1', hashedPassword, 'student', 'Amit Patel', 'amit@student.edu', '9876543216'); // Route 22K
 insertUser.run('student2', hashedPassword, 'student', 'Priya Singh', 'priya@student.edu', '9876543217'); // Route 1D
 insertUser.run('student3', hashedPassword, 'student', 'Rahul Verma', 'rahul@student.edu', '9876543218'); // Route 23K
@@ -113,6 +111,202 @@ const routesData = [
             { "stopNo": 6, "name": "Attapur", "lat": 17.3653, "lng": 78.4344 },
             { "stopNo": 7, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
         ]
+    },
+    {
+        "routeId": "30S",
+        "name": "Are Maisamma Temple to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Are Maisamma Temple", "lat": 17.4173, "lng": 78.3560 },
+            { "stopNo": 2, "name": "Bandlaguda", "lat": 17.3813, "lng": 78.3920 },
+            { "stopNo": 3, "name": "Vasavi College", "lat": 17.3816, "lng": 78.3238 },
+            { "stopNo": 4, "name": "J.K Function Hall", "lat": 17.3960, "lng": 78.3600 },
+            { "stopNo": 5, "name": "Narsingi Main Road", "lat": 17.3924, "lng": 78.3496 },
+            { "stopNo": 6, "name": "O.U Colony X Roads", "lat": 17.4030, "lng": 78.3870 },
+            { "stopNo": 7, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "13E",
+        "name": "Nagaram to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Nagaram", "lat": 17.4765, "lng": 78.5662 },
+            { "stopNo": 2, "name": "ECIL", "lat": 17.4762, "lng": 78.5713 },
+            { "stopNo": 3, "name": "Housing Board", "lat": 17.4585, "lng": 78.5570 },
+            { "stopNo": 4, "name": "Mettuguda", "lat": 17.4353, "lng": 78.5085 },
+            { "stopNo": 5, "name": "Kawadiguda", "lat": 17.4103, "lng": 78.4940 },
+            { "stopNo": 6, "name": "Lower Tank Bund", "lat": 17.4094, "lng": 78.4747 },
+            { "stopNo": 7, "name": "Tolichowki", "lat": 17.3993, "lng": 78.3996 },
+            { "stopNo": 8, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "10E",
+        "name": "Kushaiguda to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Kushaiguda", "lat": 17.4810, "lng": 78.5755 },
+            { "stopNo": 2, "name": "Bhavans College", "lat": 17.4489, "lng": 78.5040 },
+            { "stopNo": 3, "name": "Malkajgiri", "lat": 17.4474, "lng": 78.5240 },
+            { "stopNo": 4, "name": "Mettuguda", "lat": 17.4353, "lng": 78.5085 },
+            { "stopNo": 5, "name": "Paradise", "lat": 17.4417, "lng": 78.4843 },
+            { "stopNo": 6, "name": "Khairathabad", "lat": 17.4126, "lng": 78.4607 },
+            { "stopNo": 7, "name": "Masab Tank", "lat": 17.4039, "lng": 78.4522 },
+            { "stopNo": 8, "name": "Tolichowki", "lat": 17.3993, "lng": 78.3996 },
+            { "stopNo": 9, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "5D",
+        "name": "DRDL to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "DRDL", "lat": 17.3091, "lng": 78.4854 },
+            { "stopNo": 2, "name": "Balapur X Roads", "lat": 17.3104, "lng": 78.4997 },
+            { "stopNo": 3, "name": "NTR Nagar", "lat": 17.3290, "lng": 78.5005 },
+            { "stopNo": 4, "name": "Musarambagh", "lat": 17.3790, "lng": 78.5095 },
+            { "stopNo": 5, "name": "Kachiguda", "lat": 17.3912, "lng": 78.4952 },
+            { "stopNo": 6, "name": "Narayanguda PS", "lat": 17.3992, "lng": 78.4880 },
+            { "stopNo": 7, "name": "Mahaveer Hospital", "lat": 17.3998, "lng": 78.4675 },
+            { "stopNo": 8, "name": "Tolichowki", "lat": 17.3993, "lng": 78.3996 },
+            { "stopNo": 9, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "16E",
+        "name": "Budha Nagar Road No 7 to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Budha Nagar Road No 7", "lat": 17.4148, "lng": 78.5560 },
+            { "stopNo": 2, "name": "Boduppal", "lat": 17.4135, "lng": 78.5783 },
+            { "stopNo": 3, "name": "Uppal Depot", "lat": 17.4016, "lng": 78.5590 },
+            { "stopNo": 4, "name": "Uppal Bus Stand", "lat": 17.4057, "lng": 78.5591 },
+            { "stopNo": 5, "name": "Uppal Ring Road", "lat": 17.4030, "lng": 78.5615 },
+            { "stopNo": 6, "name": "Survey of India", "lat": 17.3950, "lng": 78.5568 },
+            { "stopNo": 7, "name": "Habsiguda", "lat": 17.4140, "lng": 78.5410 },
+            { "stopNo": 8, "name": "Tarnaka", "lat": 17.4283, "lng": 78.5386 },
+            { "stopNo": 9, "name": "Railway Degree College", "lat": 17.4305, "lng": 78.5332 },
+            { "stopNo": 10, "name": "Mettuguda", "lat": 17.4353, "lng": 78.5085 },
+            { "stopNo": 11, "name": "Allagadda Bavi", "lat": 17.4200, "lng": 78.5050 },
+            { "stopNo": 12, "name": "Sitaphalmandi", "lat": 17.4300, "lng": 78.5000 },
+            { "stopNo": 13, "name": "Chilkalguda", "lat": 17.4405, "lng": 78.4972 },
+            { "stopNo": 14, "name": "Padmarao Nagar", "lat": 17.4304, "lng": 78.5061 },
+            { "stopNo": 15, "name": "Musheerabad", "lat": 17.4143, "lng": 78.4980 },
+            { "stopNo": 16, "name": "Gokonda X Roads", "lat": 17.4070, "lng": 78.4920 },
+            { "stopNo": 17, "name": "RTC X Roads", "lat": 17.4040, "lng": 78.4890 },
+            { "stopNo": 18, "name": "Ashok Nagar X Roads", "lat": 17.4010, "lng": 78.4850 },
+            { "stopNo": 19, "name": "Telugu Talli Flyover", "lat": 17.3990, "lng": 78.4790 },
+            { "stopNo": 20, "name": "Secretariat", "lat": 17.4035, "lng": 78.4706 },
+            { "stopNo": 21, "name": "Lakdikapool", "lat": 17.4020, "lng": 78.4653 },
+            { "stopNo": 22, "name": "NMDC", "lat": 17.3965, "lng": 78.4550 },
+            { "stopNo": 23, "name": "Mehdipatnam", "lat": 17.3916, "lng": 78.4402 },
+            { "stopNo": 24, "name": "Nanal Nagar", "lat": 17.3880, "lng": 78.4300 },
+            { "stopNo": 25, "name": "Tolichowki", "lat": 17.3993, "lng": 78.3996 },
+            { "stopNo": 26, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "20K",
+        "name": "West Marredpally to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "West Marredpally", "lat": 17.4508, "lng": 78.4983 },
+            { "stopNo": 2, "name": "Balkampet", "lat": 17.4485, "lng": 78.4502 },
+            { "stopNo": 3, "name": "Balkampet Temple", "lat": 17.4475, "lng": 78.4495 },
+            { "stopNo": 4, "name": "S.R Nagar PS", "lat": 17.4440, "lng": 78.4450 },
+            { "stopNo": 5, "name": "S.R Nagar Community Hall", "lat": 17.4425, "lng": 78.4440 },
+            { "stopNo": 6, "name": "S.R Nagar Statue", "lat": 17.4410, "lng": 78.4430 },
+            { "stopNo": 7, "name": "Vengal Rao Nagar", "lat": 17.4402, "lng": 78.4380 },
+            { "stopNo": 8, "name": "Rajiv Nagar", "lat": 17.4380, "lng": 78.4350 },
+            { "stopNo": 9, "name": "Mid Land", "lat": 17.4365, "lng": 78.4320 },
+            { "stopNo": 10, "name": "Mothi Nagar", "lat": 17.4335, "lng": 78.4280 },
+            { "stopNo": 11, "name": "Mee Seva", "lat": 17.4300, "lng": 78.4250 },
+            { "stopNo": 12, "name": "P.R.R Nagar", "lat": 17.4280, "lng": 78.4230 },
+            { "stopNo": 13, "name": "Janapriya Apartments", "lat": 17.4250, "lng": 78.4200 },
+            { "stopNo": 14, "name": "Erragadda", "lat": 17.4486, "lng": 78.4433 },
+            { "stopNo": 15, "name": "Bharathi Nagar", "lat": 17.4455, "lng": 78.4400 },
+            { "stopNo": 16, "name": "Moosapet", "lat": 17.4653, "lng": 78.4336 },
+            { "stopNo": 17, "name": "Metro", "lat": 17.4675, "lng": 78.4345 },
+            { "stopNo": 18, "name": "Kukatpally", "lat": 17.4948, "lng": 78.3996 },
+            { "stopNo": 19, "name": "KPHB", "lat": 17.4837, "lng": 78.3915 },
+            { "stopNo": 20, "name": "KPHB Road No 1", "lat": 17.4855, "lng": 78.3885 },
+            { "stopNo": 21, "name": "Malasia Township", "lat": 17.4870, "lng": 78.3850 },
+            { "stopNo": 22, "name": "KPHB V Phase", "lat": 17.4890, "lng": 78.3820 },
+            { "stopNo": 23, "name": "Flyover", "lat": 17.4920, "lng": 78.3790 },
+            { "stopNo": 24, "name": "Hi-Tech City Railway Station", "lat": 17.4495, "lng": 78.3781 },
+            { "stopNo": 25, "name": "Hi-Tech City", "lat": 17.4435, "lng": 78.3772 },
+            { "stopNo": 26, "name": "Darga", "lat": 17.4230, "lng": 78.3990 },
+            { "stopNo": 27, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "14E",
+        "name": "Diamond Point to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Diamond Point", "lat": 17.4745, "lng": 78.5040 },
+            { "stopNo": 2, "name": "Monda Market", "lat": 17.4392, "lng": 78.4983 },
+            { "stopNo": 3, "name": "Pallavi School", "lat": 17.4380, "lng": 78.4900 },
+            { "stopNo": 4, "name": "Bapuji Nagar", "lat": 17.4330, "lng": 78.4850 },
+            { "stopNo": 5, "name": "Bowenpally PS", "lat": 17.4600, "lng": 78.4800 },
+            { "stopNo": 6, "name": "Ferozguda", "lat": 17.4570, "lng": 78.4700 },
+            { "stopNo": 7, "name": "B.B.R Hospital", "lat": 17.4520, "lng": 78.4705 },
+            { "stopNo": 8, "name": "Shobhana Theatre", "lat": 17.4450, "lng": 78.4700 },
+            { "stopNo": 9, "name": "Bala Nagar", "lat": 17.4510, "lng": 78.4490 },
+            { "stopNo": 10, "name": "Fathe Nagar", "lat": 17.4580, "lng": 78.4380 },
+            { "stopNo": 11, "name": "Sanath Nagar Flyover", "lat": 17.4555, "lng": 78.4440 },
+            { "stopNo": 12, "name": "Erragadda", "lat": 17.4486, "lng": 78.4433 },
+            { "stopNo": 13, "name": "Gokul Theatre", "lat": 17.4470, "lng": 78.4350 },
+            { "stopNo": 14, "name": "ESI", "lat": 17.4430, "lng": 78.4320 },
+            { "stopNo": 15, "name": "Vikas Puri", "lat": 17.4400, "lng": 78.4290 },
+            { "stopNo": 16, "name": "J.J Hospital", "lat": 17.4370, "lng": 78.4250 },
+            { "stopNo": 17, "name": "Kalyan Nagar", "lat": 17.4340, "lng": 78.4220 },
+            { "stopNo": 18, "name": "Krishnakant Park", "lat": 17.4320, "lng": 78.4200 },
+            { "stopNo": 19, "name": "Yusufguda Basthi", "lat": 17.4300, "lng": 78.4180 },
+            { "stopNo": 20, "name": "Yellareddy Guda Check Post", "lat": 17.4280, "lng": 78.4150 },
+            { "stopNo": 21, "name": "Sri Nagar Colony", "lat": 17.4260, "lng": 78.4120 },
+            { "stopNo": 22, "name": "Satya Sai Nigam", "lat": 17.4240, "lng": 78.4100 },
+            { "stopNo": 23, "name": "Kamala Nagar", "lat": 17.4220, "lng": 78.4080 },
+            { "stopNo": 24, "name": "Krishna Nagar", "lat": 17.4200, "lng": 78.4060 },
+            { "stopNo": 25, "name": "Venkatagiri", "lat": 17.4180, "lng": 78.4040 },
+            { "stopNo": 26, "name": "Jubilee Hills Road No 10", "lat": 17.4160, "lng": 78.4020 },
+            { "stopNo": 27, "name": "Gayathri Hills", "lat": 17.4140, "lng": 78.4000 },
+            { "stopNo": 28, "name": "Peddamma Temple", "lat": 17.4215, "lng": 78.4070 },
+            { "stopNo": 29, "name": "Madapur PS", "lat": 17.4484, "lng": 78.3915 },
+            { "stopNo": 30, "name": "Hi Tech City", "lat": 17.4435, "lng": 78.3772 },
+            { "stopNo": 31, "name": "Shilparamam", "lat": 17.4520, "lng": 78.3787 },
+            { "stopNo": 32, "name": "Kothaguda", "lat": 17.4680, "lng": 78.3840 },
+            { "stopNo": 33, "name": "Gachibowli", "lat": 17.4401, "lng": 78.3489 },
+            { "stopNo": 34, "name": "Darga", "lat": 17.4230, "lng": 78.3990 },
+            { "stopNo": 35, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
+    },
+    {
+        "routeId": "15E",
+        "name": "Risala Bazar to GNITS",
+        "stops": [
+            { "stopNo": 1, "name": "Risala Bazar", "lat": 17.4830, "lng": 78.4990 },
+            { "stopNo": 2, "name": "Bollaram", "lat": 17.5250, "lng": 78.5120 },
+            { "stopNo": 3, "name": "Old Alwal", "lat": 17.5000, "lng": 78.5040 },
+            { "stopNo": 4, "name": "Temple Alwal", "lat": 17.4920, "lng": 78.5020 },
+            { "stopNo": 5, "name": "Alwal", "lat": 17.4940, "lng": 78.5050 },
+            { "stopNo": 6, "name": "Lothukunta", "lat": 17.4860, "lng": 78.5120 },
+            { "stopNo": 7, "name": "Lal Bazar", "lat": 17.4700, "lng": 78.5070 },
+            { "stopNo": 8, "name": "Thirumalagiri", "lat": 17.4600, "lng": 78.4980 },
+            { "stopNo": 9, "name": "Karkhana", "lat": 17.4550, "lng": 78.4985 },
+            { "stopNo": 10, "name": "Secunderabad Club", "lat": 17.4400, "lng": 78.4930 },
+            { "stopNo": 11, "name": "Mud Ford", "lat": 17.4370, "lng": 78.4870 },
+            { "stopNo": 12, "name": "Sikh Village X Roads", "lat": 17.4350, "lng": 78.4850 },
+            { "stopNo": 13, "name": "Paradise", "lat": 17.4417, "lng": 78.4843 },
+            { "stopNo": 14, "name": "Shyamlal Building", "lat": 17.4330, "lng": 78.4800 },
+            { "stopNo": 15, "name": "Begumpet", "lat": 17.4443, "lng": 78.4666 },
+            { "stopNo": 16, "name": "Lifestyle", "lat": 17.4310, "lng": 78.4560 },
+            { "stopNo": 17, "name": "Panjagutta", "lat": 17.4260, "lng": 78.4530 },
+            { "stopNo": 18, "name": "Nagarjuna Circle", "lat": 17.4250, "lng": 78.4490 },
+            { "stopNo": 19, "name": "TV9", "lat": 17.4220, "lng": 78.4450 },
+            { "stopNo": 20, "name": "LV Prasad Eye Hospital", "lat": 17.4190, "lng": 78.4410 },
+            { "stopNo": 21, "name": "Jubilee Check Post", "lat": 17.4257, "lng": 78.4107 },
+            { "stopNo": 22, "name": "Peddamma Temple", "lat": 17.4215, "lng": 78.4070 },
+            { "stopNo": 23, "name": "Hi Tech City", "lat": 17.4435, "lng": 78.3772 },
+            { "stopNo": 24, "name": "Mindspace", "lat": 17.4411, "lng": 78.3820 },
+            { "stopNo": 25, "name": "Raidurgam", "lat": 17.4262, "lng": 78.3780 },
+            { "stopNo": 26, "name": "Darga", "lat": 17.4230, "lng": 78.3990 },
+            { "stopNo": 27, "name": "GNITS", "lat": 17.4124, "lng": 78.3970 }
+        ]
     }
 ];
 
@@ -164,17 +358,25 @@ const insertBus = db.prepare(`
     VALUES (?, ?, ?, ?)
 `);
 
-// Assigning buses to routes (1 bus per route for demo)
-insertBus.run('BUS-22K', '22K', 2, 'idle'); // driver1
-insertBus.run('BUS-1D', '1D', 3, 'idle'); // driver2
-insertBus.run('BUS-23K', '23K', 4, 'idle'); // driver3
-insertBus.run('BUS-27P', '27P', 5, 'idle'); // driver4
-insertBus.run('BUS-7D', '7D', 6, 'idle'); // driver5
+// Assigning buses to routes
+insertBus.run('BUS-22K', '22K', 2, 'idle');
+insertBus.run('BUS-1D', '1D', 3, 'idle');
+insertBus.run('BUS-23K', '23K', 4, 'idle');
+insertBus.run('BUS-27P', '27P', 5, 'idle');
+insertBus.run('BUS-7D', '7D', 6, 'idle');
+insertBus.run('BUS-30S', '30S', 2, 'idle');
+insertBus.run('BUS-13E', '13E', 3, 'idle');
+insertBus.run('BUS-10E', '10E', 4, 'idle');
+insertBus.run('BUS-5D', '5D', 5, 'idle');
+insertBus.run('BUS-16E', '16E', 2, 'idle');
+insertBus.run('BUS-20K', '20K', 3, 'idle');
+insertBus.run('BUS-14E', '14E', 4, 'idle');
+insertBus.run('BUS-15E', '15E', 5, 'idle');
 
 console.log('✅ Created buses');
 
 
-// Assign students to stops (One student per route for demo)
+// Assign students to stops
 const insertStudentStop = db.prepare(`
     INSERT OR IGNORE INTO student_stops (student_id, stop_id)
     VALUES (?, ?)
@@ -183,25 +385,45 @@ const insertStudentStop = db.prepare(`
 // Fetch stop IDs for assignment
 const getStopId = db.prepare(`SELECT id FROM stops WHERE route_id = ? AND sequence_order = ?`);
 
-// Student 1 -> 22K (KPHB)
-const stop22k = getStopId.get('22K', 3); // KPHB
-if (stop22k) insertStudentStop.run(7, stop22k.id); // student1 (id 7 based on insertion order: admin=1, d1=2, d2=3, d3=4, d4=5, d5=6)
+// Assign students
+const stop22k = getStopId.get('22K', 3);
+if (stop22k) insertStudentStop.run(7, stop22k.id);
 
-// Student 2 -> 1D (Malakpet)
 const stop1d = getStopId.get('1D', 4);
-if (stop1d) insertStudentStop.run(8, stop1d.id); // student2
+if (stop1d) insertStudentStop.run(8, stop1d.id);
 
-// Student 3 -> 23K (Lingampally)
 const stop23k = getStopId.get('23K', 4);
-if (stop23k) insertStudentStop.run(9, stop23k.id); // student3
+if (stop23k) insertStudentStop.run(9, stop23k.id);
 
-// Student 4 -> 27P (JNTU)
 const stop27p = getStopId.get('27P', 5);
-if (stop27p) insertStudentStop.run(10, stop27p.id); // student4
+if (stop27p) insertStudentStop.run(10, stop27p.id);
 
-// Student 5 -> 7D (Midani)
 const stop7d = getStopId.get('7D', 4);
-if (stop7d) insertStudentStop.run(11, stop7d.id); // student5
+if (stop7d) insertStudentStop.run(11, stop7d.id);
+
+const stop30s = getStopId.get('30S', 3);
+if (stop30s) insertStudentStop.run(7, stop30s.id);
+
+const stop13e = getStopId.get('13E', 4);
+if (stop13e) insertStudentStop.run(8, stop13e.id);
+
+const stop10e = getStopId.get('10E', 5);
+if (stop10e) insertStudentStop.run(9, stop10e.id);
+
+const stop5d = getStopId.get('5D', 4);
+if (stop5d) insertStudentStop.run(10, stop5d.id);
+
+const stop16e = getStopId.get('16E', 5);
+if (stop16e) insertStudentStop.run(11, stop16e.id);
+
+const stop20k = getStopId.get('20K', 8);
+if (stop20k) insertStudentStop.run(7, stop20k.id);
+
+const stop14e = getStopId.get('14E', 12);
+if (stop14e) insertStudentStop.run(8, stop14e.id);
+
+const stop15e = getStopId.get('15E', 10);
+if (stop15e) insertStudentStop.run(9, stop15e.id);
 
 
 console.log('✅ Assigned students to stops');
