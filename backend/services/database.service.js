@@ -19,6 +19,48 @@ class DatabaseService {
         this.db.pragma('foreign_keys = ON');
 
         console.log('📦 Database connected');
+        
+        // Auto-cleanup duplicates on startup (ensures production consistency)
+        this.cleanupDuplicates();
+    }
+
+    /**
+     * Identifies and removes duplicate stops, merging any student assignments
+     */
+    cleanupDuplicates() {
+        try {
+            // Find duplicate groups
+            const duplicates = this.db.prepare(`
+                SELECT name, route_id, MIN(id) as keep_id, GROUP_CONCAT(id) as all_ids
+                FROM stops 
+                GROUP BY name, route_id 
+                HAVING COUNT(*) > 1
+            `).all();
+
+            if (duplicates.length === 0) return;
+
+            console.log(`🧹 Found ${duplicates.length} duplicate stop groups. Cleaning up...`);
+
+            const transaction = this.db.transaction(() => {
+                for (const group of duplicates) {
+                    const idsToDelete = group.all_ids.split(',').filter(id => id != group.keep_id);
+                    
+                    for (const deleteId of idsToDelete) {
+                        // Update references in other tables before deleting
+                        this.db.prepare('UPDATE OR IGNORE student_stops SET stop_id = ? WHERE stop_id = ?').run(group.keep_id, deleteId);
+                        this.db.prepare('UPDATE OR IGNORE attendance SET stop_id = ? WHERE stop_id = ?').run(group.keep_id, deleteId);
+                        
+                        // Delete the duplicate row
+                        this.db.prepare('DELETE FROM stops WHERE id = ?').run(deleteId);
+                    }
+                }
+            });
+
+            transaction();
+            console.log('✅ Duplicate stops cleanup complete');
+        } catch (error) {
+            console.error('❌ Failed to cleanup duplicates:', error);
+        }
     }
 
     /**

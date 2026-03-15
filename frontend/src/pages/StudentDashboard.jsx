@@ -215,9 +215,9 @@ function StudentDashboard() {
             try {
                 const response = await axios.get(`/api/student/routes/${routeId}/stops`);
                 const stops = response.data.data;
-                // Filter out duplicates by ID just in case (safety measure)
+                // Filter out duplicates by Name (safety measure for UI)
                 const uniqueStops = stops.filter((stop, index, self) =>
-                    index === self.findIndex((t) => t.id === stop.id)
+                    index === self.findIndex((t) => t.name === stop.name)
                 );
                 setRouteStopsForSelection(uniqueStops);
             } catch (error) {
