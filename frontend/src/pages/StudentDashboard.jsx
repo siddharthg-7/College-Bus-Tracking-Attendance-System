@@ -214,7 +214,12 @@ function StudentDashboard() {
             setIsSelectionLoading(true);
             try {
                 const response = await axios.get(`/api/student/routes/${routeId}/stops`);
-                setRouteStopsForSelection(response.data.data);
+                const stops = response.data.data;
+                // Filter out duplicates by ID just in case (safety measure)
+                const uniqueStops = stops.filter((stop, index, self) =>
+                    index === self.findIndex((t) => t.id === stop.id)
+                );
+                setRouteStopsForSelection(uniqueStops);
             } catch (error) {
                 console.error("Failed to fetch stops", error);
                 alert("Failed to load stops for this route.");

@@ -60,7 +60,8 @@ db.exec(`
         longitude REAL NOT NULL,
         sequence_order INTEGER NOT NULL,
         distance_from_previous REAL DEFAULT 0,
-        FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE
+        FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
+        UNIQUE(route_id, name, sequence_order)
     )
 `);
 
