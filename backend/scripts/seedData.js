@@ -40,6 +40,16 @@ insertUser.run('student2', hashedPassword, 'student', 'Priya Singh', 'priya@stud
 insertUser.run('student3', hashedPassword, 'student', 'Rahul Verma', 'rahul@student.edu', '9876543218'); // Route 23K
 insertUser.run('student4', hashedPassword, 'student', 'Sneha Reddy', 'sneha@student.edu', '9876543219'); // Route 27P
 insertUser.run('student5', hashedPassword, 'student', 'Vikram Joshi', 'vikram@student.edu', '9876543220'); // Route 7D
+insertUser.run('student6', hashedPassword, 'student', 'Ananya Sharma', 'ananya@student.edu', '9876543221'); // Route 30S
+insertUser.run('student7', hashedPassword, 'student', 'Rohan Das', 'rohan@student.edu', '9876543222'); // Route 13E
+insertUser.run('student8', hashedPassword, 'student', 'Kavita Devi', 'kavita@student.edu', '9876543223'); // Route 10E
+insertUser.run('student9', hashedPassword, 'student', 'Sanjay Kumar', 'sanjay@student.edu', '9876543224'); // Route 5D
+insertUser.run('student10', hashedPassword, 'student', 'Megha Rao', 'megha@student.edu', '9876543225'); // Route 16E
+insertUser.run('student11', hashedPassword, 'student', 'Arjun Singh', 'arjun@student.edu', '9876543226'); // Route 20K
+insertUser.run('student12', hashedPassword, 'student', 'Divya Patel', 'divya@student.edu', '9876543227'); // Route 14E
+insertUser.run('student13', hashedPassword, 'student', 'Karthik N', 'karthik@student.edu', '9876543228'); // Route 15E
+insertUser.run('student14', hashedPassword, 'student', 'Pooja Hegde', 'pooja@student.edu', '9876543229'); // Extra
+insertUser.run('student15', hashedPassword, 'student', 'Manish Pandey', 'manish@student.edu', '9876543230'); // Extra
 
 console.log('✅ Created demo users');
 
@@ -376,54 +386,50 @@ insertBus.run('BUS-15E', '15E', 5, 'idle');
 console.log('✅ Created buses');
 
 
+// Clear existing assignments to ensure clean state
+db.prepare('DELETE FROM student_stops').run();
+
 // Assign students to stops
 const insertStudentStop = db.prepare(`
     INSERT OR IGNORE INTO student_stops (student_id, stop_id)
     VALUES (?, ?)
 `);
 
-// Fetch stop IDs for assignment
+// Fetch student/stop IDs for assignment
+const getStudentId = db.prepare(`SELECT id FROM users WHERE username = ?`);
 const getStopId = db.prepare(`SELECT id FROM stops WHERE route_id = ? AND sequence_order = ?`);
 
-// Assign students
-const stop22k = getStopId.get('22K', 3);
-if (stop22k) insertStudentStop.run(7, stop22k.id);
+const assignStudentToStop = (username, routeId, sequenceOrder) => {
+    const student = getStudentId.get(username);
+    const stop = getStopId.get(routeId, sequenceOrder);
+    if (student && stop) {
+        insertStudentStop.run(student.id, stop.id);
+        console.log(`📍 Assigned ${username} to ${routeId} (Stop ${sequenceOrder})`);
+    } else {
+        console.warn(`⚠️ Could not assign ${username} to ${routeId}: Student or Stop not found`);
+    }
+};
 
-const stop1d = getStopId.get('1D', 4);
-if (stop1d) insertStudentStop.run(8, stop1d.id);
+// Unique assignment: Each route gets one student
+assignStudentToStop('student1', '22K', 3);
+assignStudentToStop('student2', '1D', 4);
+assignStudentToStop('student3', '23K', 4);
+assignStudentToStop('student4', '27P', 5);
+assignStudentToStop('student5', '7D', 4);
+assignStudentToStop('student6', '30S', 3);
+assignStudentToStop('student7', '13E', 4);
+assignStudentToStop('student8', '10E', 5);
+assignStudentToStop('student9', '5D', 4);
+assignStudentToStop('student10', '16E', 5);
+assignStudentToStop('student11', '20K', 8);
+assignStudentToStop('student12', '14E', 12);
+assignStudentToStop('student13', '15E', 10);
 
-const stop23k = getStopId.get('23K', 4);
-if (stop23k) insertStudentStop.run(9, stop23k.id);
-
-const stop27p = getStopId.get('27P', 5);
-if (stop27p) insertStudentStop.run(10, stop27p.id);
-
-const stop7d = getStopId.get('7D', 4);
-if (stop7d) insertStudentStop.run(11, stop7d.id);
-
-const stop30s = getStopId.get('30S', 3);
-if (stop30s) insertStudentStop.run(7, stop30s.id);
-
-const stop13e = getStopId.get('13E', 4);
-if (stop13e) insertStudentStop.run(8, stop13e.id);
-
-const stop10e = getStopId.get('10E', 5);
-if (stop10e) insertStudentStop.run(9, stop10e.id);
-
-const stop5d = getStopId.get('5D', 4);
-if (stop5d) insertStudentStop.run(10, stop5d.id);
-
-const stop16e = getStopId.get('16E', 5);
-if (stop16e) insertStudentStop.run(11, stop16e.id);
-
-const stop20k = getStopId.get('20K', 8);
-if (stop20k) insertStudentStop.run(7, stop20k.id);
-
-const stop14e = getStopId.get('14E', 12);
-if (stop14e) insertStudentStop.run(8, stop14e.id);
-
-const stop15e = getStopId.get('15E', 10);
-if (stop15e) insertStudentStop.run(9, stop15e.id);
+// Extra assignments
+assignStudentToStop('student14', '22K', 2);
+assignStudentToStop('student15', '1D', 2);
+assignStudentToStop('student1', '20K', 15); // student1 on another route too
+assignStudentToStop('student2', '14E', 5);  // student2 on another route too
 
 
 console.log('✅ Assigned students to stops');
