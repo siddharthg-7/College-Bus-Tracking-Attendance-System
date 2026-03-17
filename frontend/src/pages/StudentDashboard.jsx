@@ -22,6 +22,7 @@ function StudentDashboard() {
     const [busLocation, setBusLocation] = useState(null);
     const [eta, setEta] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [attendanceStatus, setAttendanceStatus] = useState('absent');
     const [isLocked, setIsLocked] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -48,8 +49,12 @@ function StudentDashboard() {
 
     const fetchDashboardData = async () => {
         try {
+            setError(null);
             const response = await axios.get('/api/student/dashboard');
             const data = response.data.data;
+            if (!data) {
+                throw new Error('Dashboard response has no data');
+            }
             setDashboardData(data);
 
             if (data.hasSelection) {
@@ -59,7 +64,7 @@ function StudentDashboard() {
 
                 // Fetch initial bus location
                 if (data.bus) {
-                    fetchBusLocation();
+                    await fetchBusLocation();
                 }
             } else {
                 setAvailableRoutes(data.availableRoutes || []);
@@ -68,6 +73,7 @@ function StudentDashboard() {
             setLoading(false);
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
+            setError(error.message || 'Failed to load dashboard');
             setLoading(false);
         }
     };
@@ -75,12 +81,13 @@ function StudentDashboard() {
     const fetchBusLocation = async () => {
         try {
             const response = await axios.get('/api/student/bus-location');
-            if (response.data.data.busActive) {
+            if (response.data.data?.busActive) {
                 setBusLocation(response.data.data.location);
                 setEta(response.data.data.eta);
             }
         } catch (error) {
             console.error('Failed to fetch bus location:', error);
+            setError(error.message || 'Failed to fetch bus location');
         }
     };
 
@@ -271,6 +278,18 @@ function StudentDashboard() {
             <div className="dashboard-loading">
                 <div className="spin">⏳</div>
                 <p>Loading dashboard...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="dashboard-error" style={{ minHeight: '100vh', padding: '40px', background: 'var(--bg)', color: 'var(--text)' }}>
+                <h2>Unable to load dashboard</h2>
+                <p>{error}</p>
+                <button className="btn btn-primary" onClick={() => { setLoading(true); setError(null); fetchDashboardData(); }}>
+                    Retry
+                </button>
             </div>
         );
     }
