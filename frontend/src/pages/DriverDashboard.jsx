@@ -14,6 +14,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { FaTruckMoving, FaBus, FaMapMarkerAlt, FaUsers, FaTrafficLight, FaLock, FaLockOpen, FaCircle, FaSatellite, FaMap, FaExclamationCircle, FaStopCircle, FaPlayCircle, FaFlagCheckered, FaClock, FaHourglassHalf, FaExclamationTriangle, FaBell } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import websocketService from '../services/websocket.service';
@@ -93,7 +94,7 @@ function DriverDashboard() {
             setWakeLockSupported(true);
             console.log('✅ Screen Wake Lock API supported');
         } else {
-            console.warn('⚠️ Screen Wake Lock API not supported');
+            console.warn('Screen Wake Lock API not supported');
         }
 
         fetchDashboardData();
@@ -115,7 +116,7 @@ function DriverDashboard() {
      * Initialize Professional GPS Tracking System (Uber/Ola Standard)
      */
     const initializeProfessionalGPS = async () => {
-        console.log('🚀 Initializing Professional GPS Tracking System...');
+        console.log('Initializing Professional GPS Tracking System...');
 
         // 1. Multi-GNSS Manager (120 satellites)
         gnssManagerRef.current = new MultiGNSSManager();
@@ -127,7 +128,7 @@ function DriverDashboard() {
         if (imuStarted) {
             console.log('✅ IMU Sensor Fusion started (Accelerometer + Gyroscope)');
         } else {
-            console.warn('⚠️ IMU sensors not available (tunnel tracking disabled)');
+            console.warn('IMU sensors not available (tunnel tracking disabled)');
         }
 
         // 3. Map Matcher (Snap-to-Road)
@@ -138,7 +139,7 @@ function DriverDashboard() {
         animationQueueRef.current = new AnimationQueue(2000); // 2-second buffer
         animationQueueRef.current.setAnimationCallback((current, target) => {
             // This will be handled by BusMap component
-            console.log('🎬 Animating from', current, 'to', target);
+            console.log('Animating from', current, 'to', target);
         });
         console.log('✅ Animation Queue initialized (2s buffer, 60 FPS)');
 
@@ -146,7 +147,7 @@ function DriverDashboard() {
         kalmanFilterRef.current = new EnhancedKalmanFilter();
         console.log('✅ Enhanced Kalman Filter initialized (GPS + IMU fusion)');
 
-        console.log('🎉 Professional GPS Tracking System ready!');
+        console.log('Professional GPS Tracking System ready!');
     };
 
     const fetchDashboardData = async () => {
@@ -182,18 +183,18 @@ function DriverDashboard() {
      */
     const requestWakeLock = async () => {
         if (!wakeLockSupported) {
-            console.warn('⚠️ Wake Lock not supported');
+            console.warn('Wake Lock not supported');
             return;
         }
 
         try {
             wakeLockRef.current = await navigator.wakeLock.request('screen');
             setWakeLockActive(true);
-            console.log('🔒 Screen Wake Lock acquired');
+            console.log('Screen Wake Lock acquired');
 
             // Re-acquire wake lock if it's released (e.g., tab visibility change)
             wakeLockRef.current.addEventListener('release', () => {
-                console.log('🔓 Wake Lock released');
+                console.log('Wake Lock released');
                 setWakeLockActive(false);
             });
         } catch (err) {
@@ -210,7 +211,7 @@ function DriverDashboard() {
                 await wakeLockRef.current.release();
                 wakeLockRef.current = null;
                 setWakeLockActive(false);
-                console.log('🔓 Screen Wake Lock released');
+                console.log('Screen Wake Lock released');
             } catch (err) {
                 console.error('❌ Failed to release Wake Lock:', err);
             }
@@ -417,7 +418,7 @@ function DriverDashboard() {
         // Release Screen Wake Lock
         releaseWakeLock();
 
-        console.log('🛑 Location tracking stopped');
+        console.log('Location tracking stopped');
     };
 
     const handleStartTrip = async () => {
@@ -436,17 +437,17 @@ function DriverDashboard() {
     };
 
     const handleEndTrip = async () => {
-        console.log('🛑 End Trip button clicked');
+        console.log('End Trip button clicked');
 
         // Prevent double-clicks
         if (endingTrip) {
-            console.log('⚠️ Already ending trip, please wait...');
+            console.log('Already ending trip, please wait...');
             return;
         }
 
         // Show confirmation dialog
         const confirmed = window.confirm(
-            '⚠️ END TRIP CONFIRMATION\n\n' +
+            'END TRIP CONFIRMATION\n\n' +
             'Are you sure you want to end this trip?\n\n' +
             'This will:\n' +
             '• Stop GPS tracking\n' +
@@ -546,12 +547,12 @@ function DriverDashboard() {
      */
     const handleEmergencySOS = () => {
         if (!currentLocation) {
-            alert('⚠️ Cannot send SOS: GPS location not available');
+            alert('Cannot send SOS: GPS location not available');
             return;
         }
 
         const confirmed = window.confirm(
-            '🚨 EMERGENCY SOS\n\n' +
+            'EMERGENCY SOS\n\n' +
             'This will send a HIGH-PRIORITY emergency alert to:\n' +
             '• All students on your route\n' +
             '• All administrators\n' +
@@ -575,7 +576,7 @@ function DriverDashboard() {
             location: currentLocation,
             timestamp: Date.now()
         }).then(() => {
-            alert('🚨 Emergency SOS sent successfully!\n\nHelp is on the way.');
+            alert('Emergency SOS sent successfully!\n\nHelp is on the way.');
             setSosMessage('');
             setShowSosDialog(false);
         }).catch((error) => {
@@ -587,7 +588,7 @@ function DriverDashboard() {
     if (loading) {
         return (
             <div className="dashboard-loading">
-                <div className="spin">⏳</div>
+                <div className="spin"><FaHourglassHalf /></div>
                 <p>Loading dashboard...</p>
             </div>
         );
@@ -596,7 +597,7 @@ function DriverDashboard() {
     if (!dashboardData) {
         return (
             <div className="dashboard-error">
-                <h2>⚠️ No Data Available</h2>
+                <h2><FaExclamationTriangle /> No Data Available</h2>
                 <p>Please contact admin to assign you to a bus.</p>
                 <button className="btn btn-primary" onClick={logout}>Logout</button>
             </div>
@@ -648,7 +649,7 @@ function DriverDashboard() {
                         {wakeLockSupported && tripActive && (
                             <div className="status-indicator" title={`Screen Wake Lock: ${wakeLockActive ? 'Active' : 'Inactive'}`}>
                                 <span className="status-text">
-                                    {wakeLockActive ? '🔒 Screen Locked' : '🔓 Screen Unlocked'}
+                                    {wakeLockActive ? <><FaLock /> Screen Locked</> : <><FaLockOpen /> Screen Unlocked</>}
                                 </span>
                             </div>
                         )}
@@ -657,7 +658,7 @@ function DriverDashboard() {
                         {tripActive && currentLocation && (
                             <div className="status-indicator" title="Current Speed">
                                 <span className="status-text">
-                                    {isStationary ? '🟢' : '🔴'} {(currentSpeed * 3.6).toFixed(0)} km/h
+                                    <FaCircle color={isStationary ? '#10b981' : '#ef4444'} /> {(currentSpeed * 3.6).toFixed(0)} km/h
                                 </span>
                             </div>
                         )}
@@ -666,7 +667,7 @@ function DriverDashboard() {
                         {tripActive && gpsQuality !== 'unknown' && (
                             <div className="status-indicator" title={`GPS Quality: ${gpsQuality}\nSatellites: ${satellitesUsed.join(', ')}`}>
                                 <span className="status-text">
-                                    🛰️ {satellitesUsed.length > 0 ? satellitesUsed.length : '?'} sats
+                                    <FaSatellite /> {satellitesUsed.length > 0 ? satellitesUsed.length : '?'} sats
                                 </span>
                                 <span className={`badge ${gpsQuality === 'excellent' ? 'badge-success' :
                                     gpsQuality === 'good' ? 'badge-info' :
@@ -682,7 +683,7 @@ function DriverDashboard() {
                         {tripActive && roadName && (
                             <div className="status-indicator" title="Current Road (Map Matched)">
                                 <span className="status-text">
-                                    🗺️ {roadName.split(',')[0]}
+                                    <FaMap /> {roadName.split(',')[0]}
                                 </span>
                             </div>
                         )}
@@ -717,7 +718,7 @@ function DriverDashboard() {
                                 }}
                                 title="Emergency SOS - Send panic alert"
                             >
-                                🚨 SOS
+                                <FaExclamationCircle /> SOS
                             </button>
                         )}
 
@@ -732,7 +733,7 @@ function DriverDashboard() {
             {showSosDialog && (
                 <div className="modal-overlay" onClick={() => setShowSosDialog(false)}>
                     <div className="modal-content card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                        <h2 className="section-title" style={{ color: '#dc2626' }}>🚨 Emergency SOS</h2>
+                        <h2 className="section-title" style={{ color: '#dc2626' }}><FaExclamationCircle /> Emergency SOS</h2>
                         <p style={{ marginBottom: '20px' }}>
                             Send an emergency alert with your current GPS location to all students and administrators.
                         </p>
@@ -750,7 +751,7 @@ function DriverDashboard() {
                                 onClick={handleEmergencySOS}
                                 style={{ flex: 1 }}
                             >
-                                🚨 Send Emergency Alert
+                                <FaExclamationCircle /> Send Emergency Alert
                             </button>
                             <button
                                 className="btn btn-secondary"
@@ -769,7 +770,7 @@ function DriverDashboard() {
                 {/* Bus Info */}
                 <div className="info-grid">
                     <div className="info-card card">
-                        <div className="info-icon">🚌</div>
+                        <div className="info-icon"><FaBus /></div>
                         <div className="info-content">
                             <h3 className="info-label">Bus Number</h3>
                             <p className="info-value">{bus.busNumber}</p>
@@ -778,7 +779,7 @@ function DriverDashboard() {
                     </div>
 
                     <div className="info-card card">
-                        <div className="info-icon">📍</div>
+                        <div className="info-icon"><FaMapMarkerAlt /></div>
                         <div className="info-content">
                             <h3 className="info-label">Current Location</h3>
                             <p className="info-value">
@@ -797,7 +798,7 @@ function DriverDashboard() {
                     </div>
 
                     <div className="info-card card">
-                        <div className="info-icon">👥</div>
+                        <div className="info-icon"><FaUsers /></div>
                         <div className="info-content">
                             <h3 className="info-label">Total Students</h3>
                             <p className="info-value">
@@ -808,7 +809,7 @@ function DriverDashboard() {
                     </div>
 
                     <div className="info-card card">
-                        <div className="info-icon">🚦</div>
+                        <div className="info-icon"><FaTrafficLight /></div>
                         <div className="info-content">
                             <h3 className="info-label">Trip Status</h3>
                             <p className="info-value">
@@ -831,7 +832,7 @@ function DriverDashboard() {
                                 className="btn btn-primary btn-large"
                                 onClick={handleStartTrip}
                             >
-                                <span>🚀</span>
+                                <FaPlayCircle />
                                 Start Trip
                             </button>
                         ) : (
@@ -843,12 +844,12 @@ function DriverDashboard() {
                             >
                                 {endingTrip ? (
                                     <>
-                                        <span className="spin">⏳</span>
+                                        <span className="spin"><FaHourglassHalf /></span>
                                         Ending Trip...
                                     </>
                                 ) : (
                                     <>
-                                        <span>🛑</span>
+                                        <FaStopCircle />
                                         End Trip
                                     </>
                                 )}
@@ -893,7 +894,7 @@ function DriverDashboard() {
                 {tripActive && (
                     <div className="alerts-grid">
                         <div className="alert-card card">
-                            <h3 className="section-title">⚠️ Report Breakdown</h3>
+                            <h3 className="section-title"><FaExclamationTriangle /> Report Breakdown</h3>
                             <textarea
                                 className="form-input"
                                 placeholder="Describe the issue..."
@@ -910,7 +911,7 @@ function DriverDashboard() {
                         </div>
 
                         <div className="alert-card card">
-                            <h3 className="section-title">⏰ Update Delay</h3>
+                            <h3 className="section-title"><FaClock /> Update Delay</h3>
                             <input
                                 type="number"
                                 className="form-input"

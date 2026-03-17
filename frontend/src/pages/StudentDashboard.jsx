@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { FaBus, FaGraduationCap, FaBell, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaClock, FaLock, FaDotCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import websocketService from '../services/websocket.service';
@@ -24,7 +25,7 @@ function StudentDashboard() {
     const [attendanceStatus, setAttendanceStatus] = useState('absent');
     const [isLocked, setIsLocked] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
-    const [visitedStops, setVisitedStops] = useState([]); // ✅ Track visited stops
+    const [visitedStops, setVisitedStops] = useState([]); // Track visited stops
 
     // Geofencing
     const geofenceRef = useRef(null);
@@ -114,7 +115,7 @@ function StudentDashboard() {
             });
         });
 
-        // ✅ Listen for stop visit events
+        // Listen for stop visit events
         websocketService.onStopVisited((data) => {
             console.log('Stop visited:', data);
             const newStopIds = data.stops.map(s => s.stopId);
@@ -126,7 +127,7 @@ function StudentDashboard() {
             if (Notification.permission === 'granted') {
                 new Notification(notification.title, {
                     body: notification.message,
-                    icon: '🚌'
+                    icon: ''
                 });
             }
         });
@@ -155,13 +156,13 @@ function StudentDashboard() {
 
             // Register entry callback
             geofenceRef.current.onEntry((data) => {
-                console.log(`🚌 Bus entered geofence! Distance: ${Math.round(data.distance)}m`);
+                console.log(`Bus entered geofence! Distance: ${Math.round(data.distance)}m`);
 
                 // Show browser notification
                 if (Notification.permission === 'granted') {
-                    new Notification('🚌 Bus Approaching!', {
+                    new Notification('Bus Approaching', {
                         body: `Your bus is ${Math.round(data.distance)} meters away from your stop`,
-                        icon: '🚌',
+                        icon: '',
                         tag: 'bus-proximity'
                     });
                 }
@@ -169,7 +170,7 @@ function StudentDashboard() {
 
             // Register exit callback
             geofenceRef.current.onExit((data) => {
-                console.log(`🚌 Bus left geofence! Distance: ${Math.round(data.distance)}m`);
+                console.log(`Bus left geofence! Distance: ${Math.round(data.distance)}m`);
             });
 
             // Adapt radius based on ETA
@@ -197,7 +198,7 @@ function StudentDashboard() {
             setBusDistance(Math.round(status.distance));
 
             if (status.isInside) {
-                console.log(`📍 Bus is ${Math.round(status.distance)}m from your stop`);
+                console.log(`Bus is ${Math.round(status.distance)}m from your stop`);
             }
         }
     }, [busLocation]);
@@ -293,7 +294,7 @@ function StudentDashboard() {
         return (
             <div className="student-dashboard selection-mode">
                 <header className="dashboard-header">
-                    <h1 className="dashboard-title">🚌 Select Your Route</h1>
+                    <h1 className="dashboard-title"><FaBus /> Select Your Route</h1>
                     <button className="btn btn-secondary" onClick={logout}>Logout</button>
                 </header>
 
@@ -374,7 +375,7 @@ function StudentDashboard() {
                 <div className="header-content">
                     <div className="header-left">
                         <h1 className="dashboard-title">
-                            <span className="title-icon">🎓</span>
+                            <span className="title-icon"><FaGraduationCap /></span>
                             Student Dashboard
                         </h1>
                         <p className="dashboard-subtitle">Welcome, {student.name}</p>
@@ -385,7 +386,7 @@ function StudentDashboard() {
                             className="btn-icon"
                             onClick={() => setShowNotifications(!showNotifications)}
                         >
-                            🔔
+                            <FaBell />
                         </button>
                         <button className="btn btn-secondary" onClick={logout}>
                             Logout
@@ -405,7 +406,7 @@ function StudentDashboard() {
                 <div className="info-grid">
                     {/* Stop Info */}
                     <div className="info-card card">
-                        <div className="info-icon">📍</div>
+                        <div className="info-icon"><FaMapMarkerAlt /></div>
                         <div className="info-content">
                             <h3 className="info-label">Your Stop</h3>
                             <p className="info-value">{stop.name}</p>
@@ -428,7 +429,7 @@ function StudentDashboard() {
 
                     {/* Bus Status */}
                     <div className="info-card card">
-                        <div className="info-icon">🚌</div>
+                        <div className="info-icon"><FaBus /></div>
                         <div className="info-content">
                             <h3 className="info-label">Bus Status</h3>
                             <p className="info-value">
@@ -444,7 +445,7 @@ function StudentDashboard() {
 
                     {/* ETA */}
                     <div className="info-card card">
-                        <div className="info-icon">⏱️</div>
+                        <div className="info-icon"><FaClock /></div>
                         <div className="info-content">
                             <h3 className="info-label">Estimated Arrival</h3>
                             <p className="info-value">
@@ -458,18 +459,18 @@ function StudentDashboard() {
                             </p>
                             {busDistance !== null && busLocation && (
                                 <p className="info-meta" style={{ color: busDistance < 500 ? '#10b981' : '#6b7280' }}>
-                                    📍 {busDistance}m away
+                                    <FaMapMarkerAlt /> {busDistance}m away
                                 </p>
                             )}
                             {isLocked && (
-                                <p className="info-meta text-error">⚠️ Attendance Locked</p>
+                                <p className="info-meta text-error"><FaExclamationTriangle /> Attendance Locked</p>
                             )}
                         </div>
                     </div>
 
                     {/* Attendance Status */}
                     <div className="info-card card">
-                        <div className="info-icon">✅</div>
+                        <div className="info-icon"><FaCheckCircle /></div>
                         <div className="info-content">
                             <h3 className="info-label">Today's Attendance</h3>
                             <p className="info-value">
@@ -488,7 +489,7 @@ function StudentDashboard() {
                     <h2 className="section-title">Confirm Your Attendance</h2>
                     <p className="section-description">
                         {isLocked
-                            ? '⚠️ Attendance is locked. The bus is too close to your stop.'
+                            ? 'Attendance is locked. The bus is too close to your stop.'
                             : 'Will you be taking the bus today? Please confirm your attendance.'
                         }
                     </p>
@@ -498,14 +499,14 @@ function StudentDashboard() {
                             onClick={() => confirmAttendance('present')}
                             disabled={isLocked || attendanceStatus === 'present'}
                         >
-                            <span>✅</span>
+                            <FaCheckCircle />
                             I'm Coming
                         </button>
                         <button
                             className={`btn ${attendanceStatus === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
                             onClick={() => confirmAttendance('absent')}
                         >
-                            <span>❌</span>
+                            <FaTimesCircle />
                             Not Coming
                         </button>
                     </div>
@@ -525,7 +526,7 @@ function StudentDashboard() {
 
                 {/* Instructions */}
                 <div className="instructions-section card">
-                    <h3 className="section-title">📋 How It Works</h3>
+                    <h3 className="section-title"><FaClipboardList /> How It Works</h3>
                     <ul className="instructions-list">
                         <li>
                             <strong>Confirm Attendance:</strong> Mark yourself as "Present" if you'll be taking the bus today.

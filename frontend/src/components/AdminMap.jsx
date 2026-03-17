@@ -69,7 +69,7 @@ function AdminMap({ buses = [], routes = [], height = '500px' }) {
                     className: 'custom-bus-marker',
                     html: `
                         <div class="bus-marker-inner" style="background: ${getBusColor(bus.status)}">
-                            <div class="bus-icon">🚌</div>
+                            <div class="bus-icon">BUS</div>
                         </div>
                     `,
                     iconSize: [40, 40],
@@ -93,7 +93,7 @@ function AdminMap({ buses = [], routes = [], height = '500px' }) {
     // Helper functions
     const createBusPopup = (bus) => `
         <div class="map-popup">
-            <h4>🚌 Bus ${bus.bus_number}</h4>
+            <h4>Bus ${bus.bus_number}</h4>
             <p><strong>Driver:</strong> ${bus.driver_name || 'Unassigned'}</p>
             <p><strong>Route:</strong> ${bus.route_name || 'N/A'}</p>
             <p><strong>Status:</strong> ${bus.status}</p>

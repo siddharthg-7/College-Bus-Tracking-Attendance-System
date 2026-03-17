@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { FaLock, FaLockOpen, FaSearchLocation, FaBus } from 'react-icons/fa';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './BusMap.css';
@@ -130,21 +131,21 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
         // Create custom icons
         const stopIcon = L.divIcon({
             className: 'custom-stop-marker',
-            html: '<div class="stop-marker-inner">📍</div>',
+            html: '<div class="stop-marker-inner">•</div>',
             iconSize: [30, 30],
             iconAnchor: [15, 30],
         });
 
         const visitedStopIcon = L.divIcon({
             className: 'custom-stop-marker visited-stop',
-            html: '<div class="stop-marker-inner">✅</div>',
+            html: '<div class="stop-marker-inner">✓</div>',
             iconSize: [35, 35],
             iconAnchor: [17, 35],
         });
 
         const myStopIcon = L.divIcon({
             className: 'custom-stop-marker my-stop',
-            html: '<div class="stop-marker-inner">🏠</div>',
+            html: '<div class="stop-marker-inner">H</div>',
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         });
@@ -169,7 +170,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             let popupContent = `
         <div class="map-popup">
           <h4>${stop.name}</h4>
-          <p>${isMyStop ? '🏠 Your Stop' : 'Stop #' + stop.sequence_order}</p>`;
+          <p>${isMyStop ? 'Your Stop' : 'Stop #' + stop.sequence_order}</p>`;
 
             if (isVisited) {
                 popupContent += `<p style="color: #10b981; font-weight: bold;">✅ Visited</p>`;
@@ -219,7 +220,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             if (isVisited && !marker.getElement()?.classList.contains('visited-stop')) {
                 const visitedStopIcon = L.divIcon({
                     className: 'custom-stop-marker visited-stop',
-                    html: '<div class="stop-marker-inner">✅</div>',
+                    html: '<div class="stop-marker-inner">✓</div>',
                     iconSize: [35, 35],
                     iconAnchor: [17, 35],
                 });
@@ -302,7 +303,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 className: 'custom-bus-marker',
                 html: `
                 <div class="bus-marker-inner">
-                  <div class="bus-icon" style="transform: rotate(0deg);">🚌</div>
+                  <div class="bus-icon" style="transform: rotate(0deg);">BUS</div>
                   <div class="bus-pulse"></div>
                 </div>
               `,
@@ -423,7 +424,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                     onClick={() => setIsZoomLocked(!isZoomLocked)}
                     title={isZoomLocked ? "Unlock Auto-Follow" : "Lock Auto-Follow"}
                 >
-                    {isZoomLocked ? '🔒 Locked' : '🔓 Unlocked'}
+                    {isZoomLocked ? <><FaLock /> Locked</> : <><FaLockOpen /> Unlocked</>}
                 </button>
                 <button 
                     className="map-control-btn"
@@ -434,7 +435,7 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                     }}
                     title="Fit Route"
                 >
-                    🔍 Fit Route
+                    <FaSearchLocation /> Fit Route
                 </button>
                 {busLocation && (
                     <button 
@@ -446,14 +447,14 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                         }}
                         title="Recenter on Bus"
                     >
-                        🚌 Recenter
+                        <FaBus /> Recenter
                     </button>
                 )}
             </div>
 
             {!busLocation && (
                 <div className="map-overlay">
-                    <p>🚌 Waiting for bus to start trip...</p>
+                    <p><FaBus /> Waiting for bus to start trip...</p>
                 </div>
             )}
         </div>
