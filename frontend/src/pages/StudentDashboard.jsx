@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { FaBus, FaGraduationCap, FaBell, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaClock, FaLock, FaDotCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaBus, FaGraduationCap, FaBell, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaClock, FaLock, FaDotCircle, FaExclamationTriangle, FaClipboardList } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import websocketService from '../services/websocket.service';
