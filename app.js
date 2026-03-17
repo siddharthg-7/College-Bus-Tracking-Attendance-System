@@ -12,7 +12,31 @@ app.use(express.static(path.join(__dirname, "public")));
 
 io.on("connection", function (socket) {
     socket.on("send-location", function (data) {
-        io.emit("receive-location", { id: socket.id, ...data });
+        // Incoming GPS data from driver/client
+        const {
+            busId = socket.id,
+            latitude,
+            longitude,
+            speed = null,
+            heading = null,
+            accuracy = null,
+            timestamp = Date.now()
+        } = data;
+
+        const payload = {
+            id: socket.id,
+            busId,
+            latitude,
+            longitude,
+            speed,
+            heading,
+            accuracy,
+            timestamp,
+            receivedAt: Date.now()
+        };
+
+        // Broadcast to all clients updates for real-time bus movement
+        io.emit("receive-location", payload);
     });
 
     socket.on("disconnect", function () {
