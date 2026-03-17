@@ -130,23 +130,23 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
         // Create custom icons
         const stopIcon = L.divIcon({
             className: 'custom-stop-marker',
-            html: '<div class="stop-marker-inner">📍</div>',
-            iconSize: [30, 30],
-            iconAnchor: [15, 30],
+            html: '<div class="stop-marker-inner">🚏</div>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
         });
 
         const visitedStopIcon = L.divIcon({
             className: 'custom-stop-marker visited-stop',
             html: '<div class="stop-marker-inner">✅</div>',
-            iconSize: [35, 35],
-            iconAnchor: [17, 35],
+            iconSize: [45, 45],
+            iconAnchor: [22, 45],
         });
 
         const myStopIcon = L.divIcon({
             className: 'custom-stop-marker my-stop',
-            html: '<div class="stop-marker-inner">🏠</div>',
-            iconSize: [40, 40],
-            iconAnchor: [20, 40],
+            html: '<div class="stop-marker-inner">📍</div>',
+            iconSize: [50, 50],
+            iconAnchor: [25, 50],
         });
 
         // Add stop markers
@@ -302,12 +302,12 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
                 className: 'custom-bus-marker',
                 html: `
                 <div class="bus-marker-inner">
-                  <div class="bus-icon" style="transform: rotate(0deg);">🚌</div>
+                  <div class="bus-icon" style="transform: rotate(0deg); transition: transform 0.5s ease;">🚌</div>
                   <div class="bus-pulse"></div>
                 </div>
               `,
-                iconSize: [50, 50],
-                iconAnchor: [25, 25],
+                iconSize: [60, 60],
+                iconAnchor: [30, 30],
             });
 
             busMarkerRef.current = L.marker([newPosition.latitude, newPosition.longitude], {
