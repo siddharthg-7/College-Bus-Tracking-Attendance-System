@@ -1,9 +1,9 @@
-# College Bus Tracking & Attendance System
+# College Bus Tracking and Attendance System
 
 [![Status](https://img.shields.io/badge/Status-100%25%20Complete-brightgreen.svg)]()
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-blue.svg)]()
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20Vite-61dafb.svg)]()
-[![Database](https://img.shields.io/badge/Database-SQLite-003b57.svg)]()
+[![Database](https://img.shields.io/badge/Database-SQLite%20%7C%20Redis-003b57.svg)]()
 [![Real-time](https://img.shields.io/badge/Real--time-Socket.io-black.svg)]()
 
 A production-grade, real-time bus tracking and attendance management system designed for modern educational institutions. The platform automates attendance using real-time ETA calculations powered by advanced data structures and algorithms.
@@ -14,12 +14,18 @@ A production-grade, real-time bus tracking and attendance management system desi
 
 ### Real-Time GPS Tracking
 - Live bus location updates via Socket.IO
-- Animated bus markers on an interactive Leaflet map
+- Smooth Marker Interpolation (LERP) for fluid vehicle movement
+- Directional Bearing Rotation for realistic marker orientation
 - Low-latency real-time communication between drivers, students, and admins
+
+### Instant Map Loads
+- Redis-powered caching for last known bus locations
+- Zero-wait bus visibility upon user login
+- High-performance state management for active trips
 
 ### ETA-Based Attendance Lock
 - Attendance can only be marked if the bus is more than 10 minutes away
-- Accurate ETA calculation using Dijkstra’s Algorithm and Haversine Distance
+- Accurate ETA calculation using Dijkstra's Algorithm and Haversine Distance
 - Prevents proxy or late attendance marking
 
 ### Role-Based Dashboards
@@ -27,14 +33,9 @@ A production-grade, real-time bus tracking and attendance management system desi
 - Driver: Share live GPS, manage trip lifecycle, view student list
 - Admin: Monitor system, manage routes, buses, and analytics
 
-### Smart Notification System
-- FIFO-based notification queue
-- Real-time WebSocket alerts and browser notifications
-- Event-driven alerts for trip start, delays, and attendance windows
-
 ---
 
-## Data Structures & Algorithms
+## Data Structures and Algorithms
 
 | Data Structure | Implementation | Purpose |
 |---------------|---------------|---------|
@@ -42,18 +43,24 @@ A production-grade, real-time bus tracking and attendance management system desi
 | Hash Map | Custom | O(1) lookups for users and sessions |
 | Priority Queue | Min Heap | Optimized Dijkstra ETA calculation |
 | Queue | FIFO | Notification and event processing |
+| Key-Value Store | Redis | Real-time location caching |
 
 ### Algorithms Used
-- Dijkstra’s Algorithm (shortest path)
-- Haversine Formula (GPS distance)
+- Dijkstra's Algorithm (shortest path calculation)
+- Haversine Formula (GPS distance calculation)
+- Linear Interpolation (LERP) for smooth movement
 - Dynamic attendance locking based on ETA
 
 ---
 
-## UI & Design
-- Premium dark mode interface
-- Glassmorphism effects and smooth transitions
-- Mobile-first responsive design
+## Technical Stack
+
+| Category | Technology |
+|----------|------------|
+| Frontend | React.js, Vite, Leaflet, Lucide React |
+| Backend | Node.js, Express.js, Socket.IO |
+| Database | SQLite (Primary), Redis (Cache) |
+| Styling | Tailwind CSS / Vanilla CSS |
 
 ---
 
@@ -79,21 +86,12 @@ A production-grade, real-time bus tracking and attendance management system desi
 
 ## Quick Start
 
-### Prerequisites
-- Node.js v18+
-- npm or yarn
+For a detailed walkthrough, please see the SETUP_GUIDE.md.
 
-### Backend Setup
-cd backend
-npm install
-npm run init-db
-npm run seed
-npm run dev
-
-### Frontend Setup
-cd frontend
-npm install
-npm run dev
+### Environment Setup
+1. Install dependencies: `npm install`
+2. Initialize Database: `cd backend && npm run init-db && npm run seed`
+3. Run Services: `npm run dev` (Backend) and `cd ../frontend && npm run dev` (Frontend)
 
 ---
 
@@ -107,30 +105,12 @@ npm run dev
 
 ---
 
-## Security & Performance
-- JWT-based authentication with RBAC
-- Password hashing using bcrypt
-- SQL injection prevention and input validation
-- Optimized O(1) lookups and cached ETA calculations
-
----
-
 ## Documentation
 - ARCHITECTURE.md
-- QUICKSTART.md
+- REDIS_SETUP.md
+- SETUP_GUIDE.md
 - PROJECT_SUMMARY.md
 
 ---
 
-## Contributing
-Pull requests and issues are welcome.
-
----
-
-## License
-ISC License
-
----
-
-Built with ❤️ for college communities.
-"# bus-tracking-and-attendance-System" 
+Built for college communities.

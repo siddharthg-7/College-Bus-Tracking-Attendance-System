@@ -16,6 +16,7 @@ const attendanceLockService = require('./services/attendanceLock.service');
 const notificationService = require('./services/notification.service');
 const authService = require('./services/auth.service');
 const stopVerificationService = require('./services/stopVerification.service');
+const cacheService = require('./services/cache.service');
 
 // Middleware
 const errorHandler = require('./middleware/error.middleware');
@@ -124,6 +125,14 @@ io.on('connection', (socket) => {
             });
 
             console.log(`✅ User authenticated: ${user.username} (${user.role})`);
+
+            // If student or admin, immediately push last known locations for instant map load
+            if (user.role === 'student' || user.role === 'admin') {
+                const locations = await cacheService.getAllBusLocations();
+                locations.forEach(loc => {
+                    socket.emit('receive-location', loc);
+                });
+            }
         } catch (error) {
             socket.emit('auth-error', { message: 'Invalid token' });
         }
@@ -165,7 +174,18 @@ io.on('connection', (socket) => {
             // Broadcast updates
             const stopsStatus = attendanceLockService.updateAttendanceLocks(bus.trip_id, bus.route_id, { lat: latitude, lng: longitude });
             
-            io.emit('receive-location', { busId: bus.id, latitude, longitude, timestamp: new Date().toISOString() });
+            const payload = { 
+                busId: bus.id, 
+                latitude, 
+                longitude, 
+                speed: speed || 0,
+                timestamp: new Date().toISOString() 
+            };
+
+            // Store in Redis Cache for instant load
+            cacheService.setBusLocation(bus.id, payload);
+            
+            io.emit('receive-location', payload);
             io.emit('eta-update', { busId: bus.id, routeId: bus.route_id, stops: stopsStatus });
 
         } catch (error) {
@@ -240,7 +260,18 @@ io.on('connection', (socket) => {
             // Broadcast the latest state for live tracking
             const stopsStatus = attendanceLockService.updateAttendanceLocks(bus.trip_id, bus.route_id, { lat: latest.latitude, lng: latest.longitude });
             
-            io.emit('receive-location', { busId: bus.id, latitude: latest.latitude, longitude: latest.longitude, timestamp: new Date(latest.timestamp).toISOString() });
+            const payload = { 
+                busId: bus.id, 
+                latitude: latest.latitude, 
+                longitude: latest.longitude, 
+                speed: latest.speed || 0,
+                timestamp: new Date(latest.timestamp).toISOString() 
+            };
+
+            // Store in Redis Cache
+            cacheService.setBusLocation(bus.id, payload);
+            
+            io.emit('receive-location', payload);
             io.emit('eta-update', { busId: bus.id, routeId: bus.route_id, stops: stopsStatus });
 
         } catch (error) {
@@ -360,6 +391,10 @@ server.listen(PORT, () => {
     console.log(`   📡 WebSocket enabled`);
     console.log(`   🗄️  Database connected`);
     console.log(`   🔐 JWT authentication enabled`);
+    
+    // Initialize Redis
+    cacheService.connect();
+    
     console.log('   ========================================\n');
 });
 
