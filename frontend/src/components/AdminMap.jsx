@@ -131,7 +131,7 @@ function AdminMap({ buses = [], routes = [], height = '500px' }) {
     // Helper functions
     const createBusPopup = (bus) => `
         <div class="map-popup">
-            <h4>🚌 Bus ${bus.bus_number}</h4>
+            <h4>Bus ${bus.bus_number}</h4>
             <p><strong>Driver:</strong> ${bus.driver_name || 'Unassigned'}</p>
             <p><strong>Route:</strong> ${bus.route_name || 'N/A'}</p>
             <p><strong>Status:</strong> <span class="badge" style="background: ${getBusColor(bus.status)}; color: white; padding: 2px 6px; border-radius: 4px;">${bus.status}</span></p>

@@ -22,8 +22,23 @@ function calculateBearing(startLat, startLng, endLat, endLng) {
 
 if (navigator.geolocation) {
     navigator.geolocation.watchPosition((position) => {
-        const { latitude, longitude, speed, heading } = position.coords;
-        socket.emit("send-location", { latitude, longitude, speed, heading });
+        const {
+            latitude,
+            longitude,
+            speed,
+            heading,
+            accuracy
+        } = position.coords;
+
+        // Send rich GPS data to server for real-time tracking
+        socket.emit("send-location", {
+            latitude,
+            longitude,
+            speed: speed || 0,
+            heading: heading || 0,
+            accuracy: accuracy || null,
+            timestamp: position.timestamp || Date.now()
+        });
     }, (error) => {
         console.error("Geolocation error:", error);
     },
@@ -44,23 +59,25 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const markers = {};
 
 socket.on("receive-location", (data) => {
-    const { id, latitude, longitude, speed, bearing: busBearing } = data;
+    const { id, busId, latitude, longitude, speed, heading, accuracy, timestamp, bearing: busBearing } = data;
     
     // Auto-center on first location
     if (Object.keys(markers).length === 0) {
         map.setView([latitude, longitude], 16);
     }
 
-    if (markers[id]) {
+    const markerKey = busId || id;
+
+    if (markers[markerKey]) {
         // Smooth Movement (LERP)
-        const markerObj = markers[id];
+        const markerObj = markers[markerKey];
         const startPos = markerObj.getLatLng();
         const startLat = startPos.lat;
         const startLng = startPos.lng;
         const startTime = performance.now();
         
         // Calculate bearing if not provided by backend
-        const bearing = busBearing !== undefined ? busBearing : calculateBearing(startLat, startLng, latitude, longitude);
+        const bearing = busBearing !== undefined ? busBearing : (heading !== undefined ? heading : calculateBearing(startLat, startLng, latitude, longitude));
 
         function animateMarker(currentTime) {
             const elapsed = currentTime - startTime;
@@ -89,6 +106,9 @@ socket.on("receive-location", (data) => {
         }
 
         requestAnimationFrame(animateMarker);
+        
+        // Update popup info
+        markerObj.setPopupContent(`Bus: ${markerKey}<br/>Speed: ${speed || 'n/a'} m/s<br/>Accuracy: ${accuracy || 'n/a'}m<br/>Updated: ${new Date(timestamp || Date.now()).toLocaleTimeString()}`);
     } else {
         // Create new marker with Emoji
         const busIcon = L.divIcon({
@@ -103,8 +123,13 @@ socket.on("receive-location", (data) => {
             iconAnchor: [20, 20]
         });
 
-        markers[id] = L.marker([latitude, longitude], { icon: busIcon }).addTo(map);
+        const newMarker = L.marker([latitude, longitude], { icon: busIcon }).addTo(map);
+        newMarker.bindPopup(`Bus: ${markerKey}<br/>Speed: ${speed || 'n/a'} m/s<br/>Accuracy: ${accuracy || 'n/a'}m<br/>Updated: ${new Date(timestamp || Date.now()).toLocaleTimeString()}`);
+        markers[markerKey] = newMarker;
     }
+
+    // Optional: center map on current bus (toggle as desired)
+    // map.setView([latitude, longitude], 16);
 });
 
 socket.on("user-disconnected", (id) => {

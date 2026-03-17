@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { FaBus, FaLock, FaExclamationTriangle, FaClock, FaBullhorn, FaBell, FaInbox, FaHourglassHalf } from 'react-icons/fa';
 import axios from 'axios';
 import './NotificationPanel.css';
 
@@ -44,11 +45,11 @@ function NotificationPanel({ onClose }) {
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'arrival': return '🚌';
-            case 'lock': return '🔒';
-            case 'breakdown': return '⚠️';
-            case 'delay': return '⏰';
-            default: return '📢';
+            case 'arrival': return <FaBus />;
+            case 'lock': return <FaLock />;
+            case 'breakdown': return <FaExclamationTriangle />;
+            case 'delay': return <FaClock />;
+            default: return <FaBullhorn />;
         }
     };
 
@@ -67,7 +68,7 @@ function NotificationPanel({ onClose }) {
             <div className="notification-panel slide-in" onClick={(e) => e.stopPropagation()}>
                 <div className="panel-header">
                     <h2 className="panel-title">
-                        <span>🔔</span>
+                        <FaBell />
                         Notifications
                         {unreadCount > 0 && (
                             <span className="unread-badge">{unreadCount}</span>
@@ -79,12 +80,12 @@ function NotificationPanel({ onClose }) {
                 <div className="panel-content">
                     {loading ? (
                         <div className="panel-loading">
-                            <div className="spin">⏳</div>
+                            <div className="spin"><FaHourglassHalf /></div>
                             <p>Loading notifications...</p>
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="panel-empty">
-                            <div className="empty-icon">📭</div>
+                            <div className="empty-icon"><FaInbox /></div>
                             <p>No notifications yet</p>
                         </div>
                     ) : (

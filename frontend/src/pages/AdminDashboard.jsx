@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { FaUserTie, FaBus, FaGraduationCap, FaCar, FaMap, FaTrafficLight, FaCheckCircle, FaClipboardList, FaChartBar, FaExclamationTriangle, FaClock, FaLock, FaRegFileAlt, FaHourglassHalf, FaPlayCircle, FaFlagCheckered, FaMapMarkerAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import AdminMap from '../components/AdminMap';
@@ -125,20 +126,20 @@ function AdminDashboard() {
 
     const getEventIcon = (eventType) => {
         switch (eventType) {
-            case 'trip_started': return '🚀';
-            case 'trip_ended': return '🏁';
-            case 'breakdown': return '⚠️';
-            case 'delay_updated': return '⏰';
-            case 'bus_arrival': return '📍';
-            case 'attendance_locked': return '🔒';
-            default: return '📝';
+            case 'trip_started': return <FaPlayCircle />;
+            case 'trip_ended': return <FaFlagCheckered />;
+            case 'breakdown': return <FaExclamationTriangle />;
+            case 'delay_updated': return <FaClock />;
+            case 'bus_arrival': return <FaMapMarkerAlt />;
+            case 'attendance_locked': return <FaLock />;
+            default: return <FaRegFileAlt />;
         }
     };
 
     if (loading) {
         return (
             <div className="dashboard-loading">
-                <div className="spin">⏳</div>
+                <div className="spin"><FaHourglassHalf /></div>
                 <p>Loading dashboard...</p>
             </div>
         );
@@ -147,7 +148,7 @@ function AdminDashboard() {
     if (!stats) {
         return (
             <div className="dashboard-error">
-                <h2>⚠️ Failed to load data</h2>
+                <h2><FaExclamationTriangle /> Failed to load data</h2>
                 <button className="btn btn-primary" onClick={fetchDashboardData}>Retry</button>
             </div>
         );
@@ -160,7 +161,7 @@ function AdminDashboard() {
                 <div className="header-content">
                     <div className="header-left">
                         <h1 className="dashboard-title">
-                            <span className="title-icon">👨‍💼</span>
+                            <span className="title-icon"><FaUserTie /></span>
                             Admin Dashboard
                         </h1>
                         <p className="dashboard-subtitle">System Overview & Management</p>
@@ -179,7 +180,7 @@ function AdminDashboard() {
                 {/* Stats Grid */}
                 <div className="stats-grid">
                     <div className="stat-card card">
-                        <div className="stat-icon">🚌</div>
+                        <div className="stat-icon"><FaBus /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Total Buses</h3>
                             <p className="stat-value">{stats.totalBuses}</p>
@@ -190,7 +191,7 @@ function AdminDashboard() {
                     </div>
 
                     <div className="stat-card card">
-                        <div className="stat-icon">🎓</div>
+                        <div className="stat-icon"><FaGraduationCap /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Total Students</h3>
                             <p className="stat-value">{stats.totalStudents}</p>
@@ -199,7 +200,7 @@ function AdminDashboard() {
                     </div>
 
                     <div className="stat-card card">
-                        <div className="stat-icon">🚗</div>
+                        <div className="stat-icon"><FaCar /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Total Drivers</h3>
                             <p className="stat-value">{stats.totalDrivers}</p>
@@ -208,7 +209,7 @@ function AdminDashboard() {
                     </div>
 
                     <div className="stat-card card">
-                        <div className="stat-icon">🗺️</div>
+                        <div className="stat-icon"><FaMap /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Active Routes</h3>
                             <p className="stat-value">{stats.totalRoutes}</p>
@@ -217,7 +218,7 @@ function AdminDashboard() {
                     </div>
 
                     <div className="stat-card card">
-                        <div className="stat-icon">🚦</div>
+                        <div className="stat-icon"><FaTrafficLight /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Active Trips</h3>
                             <p className="stat-value">{stats.activeTrips}</p>
@@ -226,7 +227,7 @@ function AdminDashboard() {
                     </div>
 
                     <div className="stat-card card">
-                        <div className="stat-icon">✅</div>
+                        <div className="stat-icon"><FaCheckCircle /></div>
                         <div className="stat-content">
                             <h3 className="stat-label">Today's Attendance</h3>
                             <p className="stat-value">
@@ -246,19 +247,19 @@ function AdminDashboard() {
                             className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
                             onClick={() => setActiveTab('overview')}
                         >
-                            🚌 Buses
+                            <FaBus /> Buses
                         </button>
                         <button
                             className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
                             onClick={() => setActiveTab('logs')}
                         >
-                            📋 Logs
+                            <FaClipboardList /> Logs
                         </button>
                         <button
                             className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
                             onClick={() => setActiveTab('analytics')}
                         >
-                            📊 Analytics
+                            <FaChartBar /> Analytics
                         </button>
                     </div>
 
@@ -340,7 +341,7 @@ function AdminDashboard() {
 
                                 {/* Attendance Stats */}
                                 <div className="analytics-card card-glass">
-                                    <h3 className="analytics-title">📊 Attendance Overview</h3>
+                                    <h3 className="analytics-title"><FaChartBar /> Attendance Overview</h3>
                                     <div className="analytics-grid">
                                         <div className="analytics-item">
                                             <span className="analytics-label">Present</span>
@@ -365,7 +366,7 @@ function AdminDashboard() {
 
                                 {/* Route Distribution */}
                                 <div className="analytics-card card-glass">
-                                    <h3 className="analytics-title">🗺️ Route Distribution</h3>
+                                    <h3 className="analytics-title"><FaMap /> Route Distribution</h3>
                                     <div className="route-list">
                                         {analytics?.routeDistribution?.map((route, index) => (
                                             <div key={index} className="route-item">
@@ -380,7 +381,7 @@ function AdminDashboard() {
 
                                 {/* Trip Statistics */}
                                 <div className="analytics-card card-glass">
-                                    <h3 className="analytics-title">🚦 Recent Trip Statistics</h3>
+                                    <h3 className="analytics-title"><FaTrafficLight /> Recent Trip Statistics</h3>
                                     <div className="trips-table">
                                         {analytics?.trips?.map((trip, index) => (
                                             <div key={index} className="trip-row">

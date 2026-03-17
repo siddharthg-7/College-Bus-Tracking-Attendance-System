@@ -230,8 +230,15 @@ class WebSocketService {
     /**
      * Send GPS location with offline batching
      */
-    sendLocation(latitude, longitude, timestamp = Date.now()) {
-        const locationData = { latitude, longitude, timestamp };
+    sendLocation(latitude, longitude, speed = 0, heading = 0, accuracy = null, timestamp = Date.now()) {
+        const locationData = {
+            latitude,
+            longitude,
+            speed,
+            heading,
+            accuracy,
+            timestamp
+        };
 
         if (this.socket?.connected) {
             // Online - send immediately
