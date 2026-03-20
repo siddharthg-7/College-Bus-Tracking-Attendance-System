@@ -8,22 +8,29 @@ Follow these steps to get Redis running on your machine:
 
 ## 💻 1. Installation
 
-### **For Windows (Recommended)**
-Windows does not officially support Redis, but you have two great options:
+### **For Docker (Recommended for Desktop Developers)**
+If you have Docker Desktop installed, this is the cleanest way to run Redis without "installing" it on your system.
 
-**Option A: Memurai (Easiest)**
-1. Go to [Memurai.com](https://www.memurai.com/get-memurai).
-2. Download and run the `.msi` installer.
-3. Once installed, it runs automatically as a Windows service.
+**Option A: One-liner (Fastest)**
+Open your terminal and run:
+```bash
+docker run -d --name bus-tracker-redis -p 6379:6379 redis
+```
+This runs Redis in the background and maps it to port 6379.
 
-**Option B: WSL2 (Native Linux feel)**
-1. Open PowerShell and run: `wsl --install` (if not already installed).
-2. Inside your Linux terminal, run:
-   ```bash
-   sudo apt update
-   sudo apt install redis-server
-   sudo service redis-server start
-   ```
+**Option B: Docker Compose (Best for Team Development)**
+Create a `docker-compose.yml` file in your root directory:
+```yaml
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    container_name: bus-tracker-redis
+    ports:
+      - "6379:6379"
+    restart: always
+```
+Run `docker-compose up -d` to start it.
 
 ---
 
