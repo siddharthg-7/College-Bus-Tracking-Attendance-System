@@ -18,3 +18,7 @@ services:
         value: 5d3d9eb8fd744b5e7d3769ab0de0e55a3365f8c95c30cf15291e3039e839a634
       - key: JWT_EXPIRES_IN
         value: 7d
+      - key: UPSTASH_REDIS_REST_URL
+        value: https://top-lamprey-78451.upstash.io
+      - key: UPSTASH_REDIS_REST_TOKEN
+        value: gQAAAAAAATJzAAIncDE5MzdkMWU1NmY5ZDE0NTgwOTJlODY5NGUxZGM2YTM2M3AxNzg0NTE
