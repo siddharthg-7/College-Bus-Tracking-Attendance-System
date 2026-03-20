@@ -50,10 +50,10 @@ const LoginPage = () => {
                 {/* Left Side - Visual Tracker */}
                 <div className="hidden md:block w-1/2 h-[700px] relative overflow-hidden bg-slate-100 dark:bg-slate-950/50 border-r border-slate-200 dark:border-slate-800">
                     <DotMap />
-                    
+
                     {/* Overlay Content */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-12 z-10">
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.3, duration: 0.5 }}
@@ -63,8 +63,8 @@ const LoginPage = () => {
                                 <Bus className="text-white h-8 w-8 -rotate-3" />
                             </div>
                         </motion.div>
-                        
-                        <motion.h2 
+
+                        <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5, duration: 0.5 }}
@@ -72,8 +72,8 @@ const LoginPage = () => {
                         >
                             College Bus Tracker
                         </motion.h2>
-                        
-                        <motion.p 
+
+                        <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.6, duration: 0.5 }}
@@ -156,7 +156,7 @@ const LoginPage = () => {
 
                             <AnimatePresence>
                                 {error && (
-                                    <motion.div 
+                                    <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
@@ -184,7 +184,7 @@ const LoginPage = () => {
                                     {loading ? "Verifying..." : "Login to Dashboard"}
                                     {!loading && <ArrowRight size={20} />}
                                 </span>
-                                
+
                                 {/* Shine Effect */}
                                 {isHovered && !loading && (
                                     <motion.div
@@ -223,7 +223,7 @@ const LoginPage = () => {
 
                         <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 text-center">
                             <p className="text-xs text-slate-400">
-                                © 2024 College Bus Tracker. Developed for Campus Transit Safety.
+                                © 2026 College Bus Tracker. Developed for Campus Transit Safety.
                             </p>
                         </div>
                     </motion.div>

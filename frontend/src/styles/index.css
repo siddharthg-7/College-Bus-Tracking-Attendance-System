@@ -28,9 +28,13 @@
 }
 
 @layer base {
-  *, ::after, ::before {
+
+  *,
+  ::after,
+  ::before {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground transition-colors duration-300;
   }
@@ -43,13 +47,14 @@
     --primary: var(--color-primary);
     --secondary: var(--color-secondary);
     --muted: var(--color-muted);
-    --accent: hsl(262 83% 58%); /* Brand Accent Color */
+    --accent: hsl(262 83% 58%);
+    /* Brand Accent Color */
     --card: #ffffff;
     --elevated: #ffffff;
     --divider: #f1f5f9;
     --text-secondary: hsl(215.4 16.3% 46.9%);
     --text-muted: hsl(215.4 16.3% 56.9%);
-    
+
     --success: #10b981;
     --success-light: #ecfdf5;
     --error: #ef4444;
@@ -95,7 +100,7 @@
     --divider: hsl(217.2 32.6% 17.5%);
     --text-secondary: hsl(215 20.2% 65.1%);
     --text-muted: hsl(215 20.2% 55.1%);
-    
+
     --success-light: rgba(16, 185, 129, 0.1);
     --error-light: rgba(239, 68, 68, 0.1);
     --warning-light: rgba(245, 158, 11, 0.1);
@@ -120,51 +125,61 @@
     font-size: var(--text-base);
   }
 
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  .btn-primary { 
-    background-color: var(--primary); 
-    color: white; 
+  .btn:active {
+    transform: scale(0.98);
   }
-  .btn-primary:hover:not(:disabled) { 
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
     filter: brightness(1.1);
     box-shadow: var(--shadow-md);
   }
 
-  .btn-secondary { 
-    background-color: var(--card); 
-    color: var(--text); 
+  .btn-secondary {
+    background-color: var(--card);
+    color: var(--text);
     border-color: var(--border);
   }
-  .btn-secondary:hover:not(:disabled) { 
+
+  .btn-secondary:hover:not(:disabled) {
     background-color: var(--divider);
     border-color: var(--border-hover);
   }
 
   /* I'M COMING Button: High-Contrast Black/White variant */
-  .btn-success { 
-    background-color: #000000; 
-    color: #ffffff; 
+  .btn-success {
+    background-color: #000000;
+    color: #ffffff;
     border-color: #000000;
   }
+
   .btn-success:hover:not(:disabled) {
     background-color: #333333;
     box-shadow: var(--shadow-md);
   }
-  
+
   .dark .btn-success {
     background-color: #ffffff;
     color: #000000;
     border-color: #ffffff;
   }
+
   .dark .btn-success:hover:not(:disabled) {
     background-color: #f1f5f9;
   }
 
-  .btn-danger { 
-    background-color: var(--error); 
-    color: white; 
+  .btn-danger {
+    background-color: var(--error);
+    color: white;
   }
 
   /* Shared Dashboard Header & Content Structure */
@@ -187,12 +202,14 @@
     align-items: center;
   }
 
-  .header-left { flex: 1; }
-  
-  .header-right { 
-    display: flex; 
-    align-items: center; 
-    gap: var(--space-3); 
+  .header-left {
+    flex: 1;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
   }
 
   .dashboard-title {
@@ -236,15 +253,45 @@
     white-space: nowrap;
   }
 
-  .badge-success { background: var(--success-light); color: var(--success); }
-  .badge-error { background: var(--error-light); color: var(--error); }
-  .badge-danger { background: var(--error-light); color: var(--error); }
-  .badge-warning { background: var(--warning-light); color: var(--warning); }
-  .badge-info { background: var(--info-light); color: var(--info); }
+  .badge-success {
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  .badge-error {
+    background: var(--error-light);
+    color: var(--error);
+  }
+
+  .badge-danger {
+    background: var(--error-light);
+    color: var(--error);
+  }
+
+  .badge-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+  }
+
+  .badge-info {
+    background: var(--info-light);
+    color: var(--info);
+  }
 
   /* Utilities */
-  .text-success { color: var(--success); }
-  .text-error { color: var(--error); }
-  .text-warning { color: var(--warning); }
-  .text-muted { color: var(--text-muted); }
+  .text-success {
+    color: var(--success);
+  }
+
+  .text-error {
+    color: var(--error);
+  }
+
+  .text-warning {
+    color: var(--warning);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
 }
