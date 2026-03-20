@@ -28,6 +28,13 @@ export function ThemeProvider({ children }) {
     useEffect(() => {
         // Apply theme to document
         document.documentElement.setAttribute('data-theme', theme);
+        
+        // Also toggle .dark class for Tailwind compatibility
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
 
         // Save to localStorage
         localStorage.setItem('theme', theme);

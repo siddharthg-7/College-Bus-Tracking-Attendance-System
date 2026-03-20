@@ -125,7 +125,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .label-row {
@@ -160,9 +160,8 @@
 .input-icon {
   position: absolute;
   left: 16px;
-  color: var(--lp-text-dim);
-  display: flex;
-  align-items: center;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .form-input {
@@ -171,7 +170,7 @@
   background-color: var(--lp-input-bg);
   border: 1px solid var(--lp-border);
   border-radius: 12px;
-  padding: 0 16px 0 48px;
+  padding-left: 44px;
   color: var(--lp-text);
   font-size: 15px;
   transition: all 0.2s ease;
@@ -337,8 +336,15 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-container {
@@ -350,6 +356,7 @@
   .login-card {
     padding: 24px;
   }
+
   .login-title {
     font-size: 26px;
   }
