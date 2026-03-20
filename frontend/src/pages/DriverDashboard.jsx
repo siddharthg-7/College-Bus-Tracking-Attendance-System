@@ -389,7 +389,7 @@ function DriverDashboard() {
                 } catch (e) { /* fallback */ }
 
                 setCurrentLocation(processed);
-                
+
                 locationBufferRef.current.push({
                     latitude: processed.latitude,
                     longitude: processed.longitude,
@@ -613,7 +613,7 @@ function DriverDashboard() {
                 <div className="header-content">
                     <div className="header-left">
                         <h1 className="dashboard-title">
-                            <span className="title-icon">🚗</span>
+                            <span className="title-icon"><FaBus /></span>
                             Driver Dashboard
                         </h1>
                         <p className="dashboard-subtitle">Welcome, {driver.name}</p>
