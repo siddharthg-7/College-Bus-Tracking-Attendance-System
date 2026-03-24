@@ -195,16 +195,16 @@ router.get('/bus-location', authenticate, authorize('student'), (req, res, next)
             });
         }
 
-        // Get active bus
+        // Get active bus with ACTIVE trip only
         const bus = db.queryOne(
-            `SELECT b.*, t.id as trip_id
+            `SELECT b.*, t.id as trip_id, t.status as trip_status, t.started_at
              FROM buses b
              JOIN trips t ON b.id = t.bus_id
-             WHERE b.route_id = ? AND t.status = 'active' AND b.status = 'active'`,
+             WHERE b.route_id = ? AND b.status = 'active' AND t.status = 'active' AND t.started_at IS NOT NULL`,
             [studentStop.route_id]
         );
 
-        if (!bus || !bus.current_lat || !bus.current_lng) {
+        if (!bus || !bus.current_lat || !bus.current_lng || bus.trip_status !== 'active') {
             return res.json({
                 success: true,
                 data: {
