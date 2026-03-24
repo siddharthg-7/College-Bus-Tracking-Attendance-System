@@ -274,15 +274,26 @@ function DriverDashboard() {
 
     // Effect to handle batch flushing
     useEffect(() => {
-        if (tripActive) {
+        if (tripActive && connectionState.connected) {
             flushTimerRef.current = setInterval(flushLocationBuffer, BATCH_SEND_INTERVAL);
+            console.log('📡 Location flush timer started');
         } else {
-            if (flushTimerRef.current) clearInterval(flushTimerRef.current);
+            if (flushTimerRef.current) {
+                clearInterval(flushTimerRef.current);
+                console.log('⛔ Location flush timer stopped');
+            }
         }
         return () => {
             if (flushTimerRef.current) clearInterval(flushTimerRef.current);
         };
     }, [tripActive, connectionState.connected]);
+
+    // Ensure WebSocket connects when trip starts
+    useEffect(() => {
+        if (tripActive && !connectionState.connected) {
+            connectWebSocket();
+        }
+    }, [tripActive]);
 
     const flushLocationBuffer = () => {
         if (!tripActive) return;
@@ -390,10 +401,18 @@ function DriverDashboard() {
 
                 setCurrentLocation(processed);
 
+                // Send location immediately for real-time visibility
+                websocketService.sendLocationBatch([{
+                    latitude: processed.latitude,
+                    longitude: processed.longitude,
+                    timestamp: timestamp,
+                    speed: speedKmh
+                }]);
+
                 locationBufferRef.current.push({
                     latitude: processed.latitude,
                     longitude: processed.longitude,
-                    timestamp: processed.timestamp,
+                    timestamp,
                     speed: speedKmh
                 });
 
@@ -426,6 +445,9 @@ function DriverDashboard() {
             const response = await axios.post('/api/driver/trip/start');
 
             if (response.data.success) {
+                // Connect WebSocket to start sharing location
+                connectWebSocket();
+
                 setTripActive(true);
                 startLocationTracking();
                 fetchManifest();
