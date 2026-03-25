@@ -11,6 +11,7 @@ export default defineConfig({
         host: true, // Listen on all network interfaces
         // https: true, // Handled by basicSsl plugin
         port: 5173,
+        allowedHosts: 'all', // Allow ngrok tunnels and any other external hosts
         proxy: {
             '/api': {
                 target: 'http://localhost:5000',

@@ -86,8 +86,9 @@ function StudentDashboard() {
                 setEta(response.data.data.eta);
             }
         } catch (error) {
-            console.error('Failed to fetch bus location:', error);
-            setError(error.message || 'Failed to fetch bus location');
+            // Non-critical: bus location will be received via WebSocket once the driver is active.
+            // Do NOT set global error state here — it would replace the whole dashboard.
+            console.warn('Could not fetch initial bus location (non-critical):', error.message);
         }
     };
 

@@ -289,6 +289,9 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
         if (now - lastUpdateReceivedRef.current < MIN_UPDATE_INTERVAL && lastUpdateReceivedRef.current !== 0) {
             return;
         }
+        // Save the previous timestamp BEFORE overwriting, so we can compute
+        // the real elapsed interval for the animation duration calculation below.
+        const prevUpdateTime = lastUpdateReceivedRef.current;
         lastUpdateReceivedRef.current = now;
 
         const map = mapInstanceRef.current;
@@ -320,11 +323,11 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             targetPositionRef.current = newPosition;
             map.setView([newPosition.latitude, newPosition.longitude], map.getZoom());
         } else {
-            // Calculate dynamic duration based on update interval
-            // Using 90% of the last interval to ensure we finish before next update
-            let dynamicDuration = now - lastUpdateReceivedRef.current;
+            // Calculate dynamic duration based on real elapsed interval between GPS updates.
+            // prevUpdateTime was saved before overwriting lastUpdateReceivedRef so this is accurate.
+            let dynamicDuration = prevUpdateTime > 0 ? (now - prevUpdateTime) : 1000;
             if (dynamicDuration < 1000) dynamicDuration = 1000;
-            if (dynamicDuration > 15000) dynamicDuration = 5000; // Cap at 15s, fallback to 5s if very long gap
+            if (dynamicDuration > 15000) dynamicDuration = 5000; // Cap: very long gap → 5s animation
 
             const startPos = busMarkerRef.current.getLatLng();
             currentPositionRef.current = {

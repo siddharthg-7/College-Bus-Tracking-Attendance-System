@@ -280,6 +280,7 @@ function DriverDashboard() {
         } else {
             if (flushTimerRef.current) {
                 clearInterval(flushTimerRef.current);
+                flushTimerRef.current = null;
                 console.log('⛔ Location flush timer stopped');
             }
         }
@@ -296,11 +297,13 @@ function DriverDashboard() {
     }, [tripActive]);
 
     const flushLocationBuffer = () => {
-        if (!tripActive) return;
+        // Use websocketService.isConnected() instead of React state (connectionState)
+        // to avoid stale closure bug — the interval captures connectionState at creation time.
+        const isConnected = websocketService.isConnected();
 
         // 1. Handle regular buffer
         if (locationBufferRef.current.length > 0) {
-            if (connectionState.connected) {
+            if (isConnected) {
                 console.log(`📡 Sending batch of ${locationBufferRef.current.length} points to server...`);
                 websocketService.sendLocationBatch(locationBufferRef.current);
                 locationBufferRef.current = [];
@@ -313,8 +316,8 @@ function DriverDashboard() {
             }
         }
 
-        // 2. Handle sync of offline buffer when reconnected
-        if (connectionState.connected && offlineBufferRef.current.length > 0) {
+        // 2. Sync offline buffer when reconnected
+        if (isConnected && offlineBufferRef.current.length > 0) {
             console.log(`🔄 Re-syncing ${offlineBufferRef.current.length} offline points...`);
             websocketService.sendLocationBatch(offlineBufferRef.current);
             offlineBufferRef.current = [];

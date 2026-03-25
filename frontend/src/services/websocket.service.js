@@ -39,6 +39,15 @@ class WebSocketService {
         this.onConnectCallbacks = [];
         this.onDisconnectCallbacks = [];
         this.onReconnectCallbacks = [];
+
+        // Stored application-level event callbacks (persist across reconnections)
+        this._appCallbacks = {
+            'receive-location': null,
+            'eta-update': null,
+            'stop-visited': null,
+            'notification': null,
+            'sos-alert': null,
+        };
     }
 
     /**
@@ -89,6 +98,15 @@ class WebSocketService {
 
             // Flush offline batch
             this.flushOfflineBatch();
+
+            // Re-attach any application-level callbacks that were registered
+            // before or during a previous connection (survive reconnects)
+            Object.entries(this._appCallbacks).forEach(([event, cb]) => {
+                if (cb) {
+                    this.socket.off(event); // remove stale listeners first
+                    this.socket.on(event, cb);
+                }
+            });
 
             // Trigger connect callbacks
             this.onConnectCallbacks.forEach(cb => cb());
@@ -297,34 +315,37 @@ class WebSocketService {
 
     // ========== Event Listeners ==========
 
-    onLocationUpdate(callback) {
+    /**
+     * Register an application-level event callback.
+     * The callback is stored so it survives socket reconnections.
+     * Calling this again with the same event replaces the old callback.
+     */
+    _registerAppCallback(event, callback) {
+        this._appCallbacks[event] = callback;
         if (this.socket) {
-            this.socket.on('receive-location', callback);
+            this.socket.off(event); // de-duplicate
+            this.socket.on(event, callback);
         }
+    }
+
+    onLocationUpdate(callback) {
+        this._registerAppCallback('receive-location', callback);
     }
 
     onETAUpdate(callback) {
-        if (this.socket) {
-            this.socket.on('eta-update', callback);
-        }
+        this._registerAppCallback('eta-update', callback);
     }
 
     onStopVisited(callback) {
-        if (this.socket) {
-            this.socket.on('stop-visited', callback);
-        }
+        this._registerAppCallback('stop-visited', callback);
     }
 
     onNotification(callback) {
-        if (this.socket) {
-            this.socket.on('notification', callback);
-        }
+        this._registerAppCallback('notification', callback);
     }
 
     onSOSReceived(callback) {
-        if (this.socket) {
-            this.socket.on('sos-alert', callback);
-        }
+        this._registerAppCallback('sos-alert', callback);
     }
 
     // Connection state callbacks
