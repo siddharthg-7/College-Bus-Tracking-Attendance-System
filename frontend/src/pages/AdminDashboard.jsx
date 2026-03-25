@@ -26,6 +26,11 @@ function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
 
+    // Buffer WebSocket location updates that arrive before the initial API
+    // response has populated the `buses` state.  After the API call resolves
+    // we apply the buffer so nothing is lost due to the race condition.
+    const locationBufferRef = useRef(new Map()); // busId -> { current_lat, current_lng, last_updated }
+
     // Notification sound ref (optional)
     const audioRef = useRef(null);
 
@@ -48,6 +53,14 @@ function AdminDashboard() {
 
         // Listen for all bus locations
         websocketService.onLocationUpdate((data) => {
+            // Always persist the latest position in the buffer so it can be
+            // applied when (or after) the API data is loaded.
+            locationBufferRef.current.set(data.busId, {
+                current_lat: data.latitude,
+                current_lng: data.longitude,
+                last_updated: data.timestamp
+            });
+
             setBuses(currentBuses => {
                 return currentBuses.map(bus => {
                     if (bus.id === data.busId) {
@@ -97,10 +110,30 @@ function AdminDashboard() {
 
             setStats(statsRes.data.data);
 
-            // Preserve map location data if we already have it to avoid jitter
-            // logic: merge new bus data but keep latest lat/lng from websocket if newer
-            // For simplicity, we just overwrite for now, websocket will update immediately after
-            setBuses(busesRes.data.data);
+            // Merge any real-time locations buffered from WebSocket into the
+            // API data so the map shows up-to-date positions even when the
+            // WebSocket update arrives before the HTTP response does.
+            const busesFromApi = busesRes.data.data.map(bus => {
+                const buffered = locationBufferRef.current.get(bus.id);
+                if (buffered) {
+                    return {
+                        ...bus,
+                        current_lat: buffered.current_lat,
+                        current_lng: buffered.current_lng,
+                        last_updated: buffered.last_updated
+                    };
+                }
+                return bus;
+            });
+
+            // Remove buffer entries for buses that are no longer active to
+            // prevent the buffer from growing indefinitely.
+            const activeBusIds = new Set(busesFromApi.filter(b => b.status === 'active').map(b => b.id));
+            locationBufferRef.current.forEach((_, id) => {
+                if (!activeBusIds.has(id)) locationBufferRef.current.delete(id);
+            });
+
+            setBuses(busesFromApi);
 
             setLogs(logsRes.data.data);
             setAnalytics(analyticsRes.data.data);
