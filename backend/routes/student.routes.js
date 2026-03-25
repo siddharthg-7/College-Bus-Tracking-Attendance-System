@@ -51,11 +51,11 @@ router.get('/dashboard', authenticate, authorize('student'), (req, res, next) =>
         // Get attendance status
         const attendance = attendanceLockService.getStudentAttendance(studentId, today);
 
-        // Get active bus for this route
+        // Get active bus for this route - INNER JOIN ensures bus only returned when trip is active
         const bus = db.queryOne(
             `SELECT b.*, t.id as trip_id, t.status as trip_status
              FROM buses b
-             LEFT JOIN trips t ON b.id = t.bus_id AND t.status = 'active'
+             INNER JOIN trips t ON b.id = t.bus_id AND t.status = 'active'
              WHERE b.route_id = ? AND b.status = 'active'`,
             [studentStop.route_id]
         );

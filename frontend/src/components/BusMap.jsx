@@ -329,12 +329,18 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
             if (dynamicDuration < 1000) dynamicDuration = 1000;
             if (dynamicDuration > 15000) dynamicDuration = 5000; // Cap: very long gap → 5s animation
 
-            const startPos = busMarkerRef.current.getLatLng();
+            // Cancel any in-flight animation and snap currentPositionRef to the
+            // marker's ACTUAL on-screen position to avoid jump on next update.
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = null;
+            }
+            const actualLatLng = busMarkerRef.current.getLatLng();
             currentPositionRef.current = {
-                latitude: startPos.lat,
-                longitude: startPos.lng
+                latitude: actualLatLng.lat,
+                longitude: actualLatLng.lng
             };
-            
+
             targetPositionRef.current = newPosition;
             targetBearingRef.current = calculateBearing(currentPositionRef.current, newPosition);
 

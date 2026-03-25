@@ -30,6 +30,7 @@ function StudentDashboard() {
 
     // Geofencing
     const geofenceRef = useRef(null);
+    const wsConnectedRef = useRef(false); // Guard: prevent duplicate WS connections
     const [busDistance, setBusDistance] = useState(null);
 
     // Ref to track the student's assigned bus ID so the WebSocket callback
