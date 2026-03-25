@@ -32,6 +32,13 @@ function StudentDashboard() {
     const geofenceRef = useRef(null);
     const [busDistance, setBusDistance] = useState(null);
 
+    // Ref to track the student's assigned bus ID so the WebSocket callback
+    // can filter location updates to only the relevant bus.
+    const myBusIdRef = useRef(null);
+    // Ref to track the student's route ID, used to discover the bus ID via
+    // ETA updates when the bus starts a trip after the page was loaded.
+    const myRouteIdRef = useRef(null);
+
     // Selection State
     const [availableRoutes, setAvailableRoutes] = useState([]);
     const [selectedRouteId, setSelectedRouteId] = useState('');
@@ -60,9 +67,29 @@ function StudentDashboard() {
             if (data.hasSelection) {
                 setAttendanceStatus(data.attendance?.status || 'absent');
                 setIsLocked(data.attendance?.isLocked || false);
+
+                // Store bus/route IDs in refs so the WebSocket callbacks can
+                // filter updates correctly. This must happen before
+                // connectWebSocket() registers the callbacks.
+                if (data.bus?.id) {
+                    myBusIdRef.current = data.bus.id;
+                }
+                if (data.stop?.routeId) {
+                    myRouteIdRef.current = data.stop.routeId;
+                }
+
                 connectWebSocket(); // Connect only if we have a selection to finish setup
 
-                // Fetch initial bus location
+                // Immediately show bus on map using coordinates already in dashboard data.
+                // This avoids the delay / separate HTTP round-trip before the map renders.
+                if (data.bus?.current_lat && data.bus?.current_lng) {
+                    setBusLocation({
+                        latitude: data.bus.current_lat,
+                        longitude: data.bus.current_lng
+                    });
+                }
+
+                // Fetch ETA and verify active-trip status via the dedicated endpoint
                 if (data.bus) {
                     await fetchBusLocation();
                 }
@@ -96,12 +123,18 @@ function StudentDashboard() {
         const token = localStorage.getItem('token');
         websocketService.connect(token);
 
-        // Listen for bus location updates
+        // Listen for bus location updates — only process updates for the
+        // student's own bus (identified via myBusIdRef).
+        // If we don't know our bus ID yet we skip the update; the ETA handler
+        // below will set myBusIdRef as soon as the bus starts a trip and the
+        // next location update will be accepted.
         websocketService.onLocationUpdate((data) => {
-            setBusLocation(prev => ({
+            const myBusId = myBusIdRef.current;
+            if (myBusId === null || data.busId !== myBusId) return;
+            setBusLocation({
                 latitude: data.latitude,
                 longitude: data.longitude
-            }));
+            });
         });
 
         // Listen for ETA updates (includes visited stops)
@@ -109,6 +142,14 @@ function StudentDashboard() {
             // Update visited stops from ETA update
             if (data.visitedStops) {
                 setVisitedStops(data.visitedStops);
+            }
+
+            // If we don't know our bus ID yet (bus started a trip after page
+            // load) but this ETA update is for our route, learn the bus ID so
+            // subsequent receive-location events are accepted.
+            if (myBusIdRef.current === null && myRouteIdRef.current !== null
+                    && data.routeId === myRouteIdRef.current) {
+                myBusIdRef.current = data.busId;
             }
 
             setDashboardData(currentData => {
