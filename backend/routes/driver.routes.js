@@ -126,6 +126,11 @@ router.post('/trip/start', authenticate, authorize('driver'), (req, res, next) =
             [bus.id]
         );
 
+        // Notify clients that trip has started
+        if (notificationService.socketIO) {
+            notificationService.socketIO.emit('trip-status', { busId: bus.id, status: 'active' });
+        }
+
         // Log event
         db.execute(
             `INSERT INTO logs (trip_id, event_type, description)
@@ -181,6 +186,11 @@ router.post('/trip/end', authenticate, authorize('driver'), (req, res, next) => 
              WHERE id = ?`,
             [trip.bus_id]
         );
+
+        // Notify clients that trip has ended
+        if (notificationService.socketIO) {
+            notificationService.socketIO.emit('trip-status', { busId: trip.bus_id, status: 'ended' });
+        }
 
         // Log event
         db.execute(

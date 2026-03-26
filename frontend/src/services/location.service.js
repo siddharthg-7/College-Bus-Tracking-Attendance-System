@@ -557,56 +557,10 @@ class IMUSensorFusion {
      * Start IMU sensors
      */
     async start() {
-        if (!window.DeviceMotionEvent || !window.DeviceOrientationEvent) {
-            console.warn('⚠️ IMU sensors not supported');
-            return false;
-        }
-
-        // Request permission on iOS 13+
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-            try {
-                const permission = await DeviceMotionEvent.requestPermission();
-                if (permission !== 'granted') {
-                    console.warn('⚠️ IMU permission denied');
-                    return false;
-                }
-            } catch (error) {
-                console.error('IMU permission error:', error);
-                return false;
-            }
-        }
-
-        // Listen to accelerometer
-        window.addEventListener('devicemotion', (event) => {
-            this.acceleration = {
-                x: event.accelerationIncludingGravity.x || 0,
-                y: event.accelerationIncludingGravity.y || 0,
-                z: event.accelerationIncludingGravity.z || 0
-            };
-
-            // Detect if vehicle is moving (simple threshold)
-            const magnitude = Math.sqrt(
-                this.acceleration.x ** 2 +
-                this.acceleration.y ** 2 +
-                this.acceleration.z ** 2
-            );
-            this.isMoving = magnitude > 10; // Threshold for movement
-        });
-
-        // Listen to gyroscope
-        window.addEventListener('deviceorientation', (event) => {
-            this.rotation = {
-                alpha: event.alpha || 0,  // Z-axis (compass heading)
-                beta: event.beta || 0,    // X-axis (front-to-back tilt)
-                gamma: event.gamma || 0   // Y-axis (left-to-right tilt)
-            };
-
-            // Use alpha as heading (0-360 degrees)
-            this.heading = event.alpha || 0;
-        });
-
-        console.log('✅ IMU sensors started');
-        return true;
+        // Modern browsers deprecate unconditional use of devicemotion/deviceorientation.
+        // Returning false disables this optional dead-reckoning module.
+        console.warn('⚠️ IMU sensors disabled to prevent browser deprecation warnings.');
+        return false;
     }
 
     /**

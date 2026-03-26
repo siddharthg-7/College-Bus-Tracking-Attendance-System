@@ -11,7 +11,12 @@ export default defineConfig({
         host: true, // Listen on all network interfaces
         // https: true, // Handled by basicSsl plugin
         port: 5173,
-        allowedHosts: 'all', // Allow ngrok tunnels and any other external hosts
+        allowedHosts: [
+            'mariana-unperpetuable-nonfeverishly.ngrok-free.dev',
+            '.ngrok-free.dev',
+            '.ngrok-free.app',
+            '.ngrok-free.io'
+        ], // Allow ngrok tunnels
         proxy: {
             '/api': {
                 target: 'http://localhost:5000',

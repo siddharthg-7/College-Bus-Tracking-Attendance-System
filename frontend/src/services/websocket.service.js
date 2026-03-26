@@ -47,6 +47,7 @@ class WebSocketService {
             'stop-visited': null,
             'notification': null,
             'sos-alert': null,
+            'trip-status': null,
         };
     }
 
@@ -342,6 +343,10 @@ class WebSocketService {
 
     onNotification(callback) {
         this._registerAppCallback('notification', callback);
+    }
+
+    onTripStatus(callback) {
+        this._registerAppCallback('trip-status', callback);
     }
 
     onSOSReceived(callback) {

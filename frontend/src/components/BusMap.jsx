@@ -282,7 +282,17 @@ function BusMap({ stops = [], busLocation = null, myStopId = null, visitedStops 
 
     // Update bus location with smooth animation and viewport control
     useEffect(() => {
-        if (!mapInstanceRef.current || !busLocation) return;
+        if (!mapInstanceRef.current) return;
+
+        if (!busLocation) {
+             if (busMarkerRef.current) {
+                 busMarkerRef.current.remove();
+                 busMarkerRef.current = null;
+                 currentPositionRef.current = null;
+                 targetPositionRef.current = null;
+             }
+             return;
+        }
 
         const now = Date.now();
         // Throttle updates to avoid jumpy UI from frequent backend spikes

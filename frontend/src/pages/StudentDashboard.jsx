@@ -130,8 +130,17 @@ function StudentDashboard() {
         // below will set myBusIdRef as soon as the bus starts a trip and the
         // next location update will be accepted.
         websocketService.onLocationUpdate((data) => {
-            const myBusId = myBusIdRef.current;
-            if (myBusId === null || data.busId !== myBusId) return;
+            console.log("LIVE LOCATION RECEIVED:", data);
+            
+            // Temporary debug fix (bypasses null or mismatched busId)
+            // If the student wants filtering, we can check just routeId or ignore filtering while debugging
+            if (!data || !data.latitude || !data.longitude) return;
+            
+            // Update busId if we didn't have it
+            if (myBusIdRef.current === null && data.busId) {
+                myBusIdRef.current = data.busId;
+            }
+
             setBusLocation({
                 latitude: data.latitude,
                 longitude: data.longitude
@@ -179,6 +188,25 @@ function StudentDashboard() {
                     body: notification.message,
                     icon: ''
                 });
+            }
+        });
+
+        // Listen for trip status changes (start/end)
+        websocketService.onTripStatus((data) => {
+            const myBusId = myBusIdRef.current;
+            if (myBusId === null || String(data.busId) !== String(myBusId)) return;
+            
+            if (data.status === 'ended') {
+                setBusLocation(null);
+                setEta(null);
+                setBusDistance(null);
+                setDashboardData(prev => ({
+                    ...prev,
+                    bus: null
+                }));
+            } else if (data.status === 'active') {
+                // Fetch fresh dashboard mapping when driver boots trip
+                fetchDashboardData();
             }
         });
     };
@@ -239,6 +267,8 @@ function StudentDashboard() {
 
     // Monitor bus location with geofence
     useEffect(() => {
+        console.log("BUS LOCATION:", busLocation);
+        
         if (busLocation && geofenceRef.current) {
             const status = geofenceRef.current.checkPosition(
                 busLocation.latitude,

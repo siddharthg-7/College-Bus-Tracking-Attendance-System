@@ -248,7 +248,7 @@ io.on('connection', (socket) => {
                         [bus.trip_id, point.latitude, point.longitude, point.speed || 0, new Date(point.timestamp).toISOString()]
                     );
                 }
-            })();
+            });
 
             // Update live location with the MOST RECENT point in the batch
             const latest = points[points.length - 1];
