@@ -15,7 +15,9 @@ console.log('🌱 Seeding database with Route data...');
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
-// Hash password for demo users
+// Hash the shared demo password with bcrypt (10 salt rounds).
+// All demo user accounts (admin, drivers, students) use this hashed value.
+// The plaintext password is 'password123' and is never stored in the database.
 const hashedPassword = bcrypt.hashSync('password123', 10);
 
 // Insert demo users

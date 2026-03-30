@@ -346,6 +346,8 @@ router.post('/drivers', authenticate, authorize('admin'), async (req, res, next)
             });
         }
 
+        // Hash the plaintext password with bcrypt (10 salt rounds) before storing.
+        // The original password cannot be recovered from the stored hash.
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const result = db.execute(

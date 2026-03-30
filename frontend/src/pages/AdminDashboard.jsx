@@ -183,7 +183,17 @@ function AdminDashboard() {
             const statsRes = await axios.get('/api/admin/dashboard', config);
             setStats(statsRes.data.data);
         } catch (err) {
-            setDriverFormError(err.response?.data?.message || 'Failed to create driver');
+            const status = err.response?.status;
+            const serverMsg = err.response?.data?.message;
+            if (serverMsg) {
+                setDriverFormError(serverMsg);
+            } else if (status === 409) {
+                setDriverFormError('Username already exists. Please choose a different username.');
+            } else if (status === 400) {
+                setDriverFormError('Please fill in all required fields correctly (password must be at least 6 characters).');
+            } else {
+                setDriverFormError('Failed to create driver. Please try again.');
+            }
         } finally {
             setDriverFormLoading(false);
         }
@@ -472,15 +482,19 @@ function AdminDashboard() {
                                                     />
                                                 </div>
                                                 <div className="form-group">
-                                                    <label className="form-label">Password *</label>
+                                                    <label className="form-label" htmlFor="driver-password">Password *</label>
                                                     <input
+                                                        id="driver-password"
                                                         type="password"
                                                         className="form-input"
                                                         value={driverForm.password}
                                                         onChange={(e) => setDriverForm({ ...driverForm, password: e.target.value })}
                                                         placeholder="Minimum 6 characters"
+                                                        minLength={6}
+                                                        aria-describedby="driver-password-hint"
                                                         required
                                                     />
+                                                    <span id="driver-password-hint" className="form-hint">Must be at least 6 characters.</span>
                                                 </div>
                                                 <div className="form-group">
                                                     <label className="form-label">Email</label>

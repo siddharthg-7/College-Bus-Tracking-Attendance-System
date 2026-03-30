@@ -79,6 +79,9 @@ class AuthService {
 
     /**
      * Register a new user (for future use)
+     *
+     * Passwords are hashed using bcryptjs with 10 salt rounds before being
+     * stored. The plaintext password is never persisted to the database.
      */
     async register(userData) {
         const { username, password, role, full_name, email, phone } = userData;
@@ -93,7 +96,8 @@ class AuthService {
             throw new Error('Username already exists');
         }
 
-        // Hash password
+        // Hash the plaintext password with bcrypt (10 salt rounds) before storing.
+        // The original password cannot be recovered from the stored hash.
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert new user
@@ -118,6 +122,10 @@ class AuthService {
 
     /**
      * Change user password
+     *
+     * The new password is hashed with bcryptjs (10 salt rounds) before being
+     * written to the database. The old hash is used only for verification and
+     * is then replaced.
      */
     async changePassword(userId, oldPassword, newPassword) {
         const user = this.db.queryOne(
@@ -135,7 +143,7 @@ class AuthService {
             throw new Error('Invalid old password');
         }
 
-        // Hash new password
+        // Hash the new plaintext password with bcrypt (10 salt rounds) before storing.
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // Update password

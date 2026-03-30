@@ -105,6 +105,39 @@ For a detailed walkthrough, please see the SETUP_GUIDE.md.
 
 ---
 
+## Security
+
+### What is Hashed?
+
+**User passwords** are the only data that is hashed in this system. Every password — for students, drivers, and admins — is hashed with **bcryptjs** using **10 salt rounds** before being written to the database. The plaintext password is never stored.
+
+| Data | Hashed? | Algorithm | Where |
+|------|---------|-----------|-------|
+| User passwords | ✅ Yes | bcrypt (10 salt rounds) | `backend/services/auth.service.js`, `backend/routes/admin.routes.js` |
+| JWT tokens | ❌ No (signed, not hashed) | HMAC-SHA256 (HS256) | `backend/services/auth.service.js` |
+| GPS coordinates | ❌ No | Stored as-is | `backend/routes/driver.routes.js` |
+| Attendance records | ❌ No | Stored as-is | `backend/routes/driver.routes.js` |
+
+#### How Password Hashing Works
+
+1. A user registers or is created (by admin or seed script).
+2. Their plaintext password is passed to `bcrypt.hash(password, 10)`.
+3. bcrypt internally generates a random salt and combines it with the password.
+4. The result is a 60-character hash string (e.g. `$2b$10$...`) that is stored in the `users.password` column.
+5. At login, `bcrypt.compare(plaintext, hash)` re-derives and checks the hash — the original password is never recoverable from the stored value.
+
+### Other Security Practices
+
+| Feature | Implementation |
+|---------|---------------|
+| Session tokens | JWT signed with `JWT_SECRET`, expire in 7 days |
+| SQL injection prevention | Parameterized queries (better-sqlite3) |
+| Role-based access control | `authenticate` + `authorize(role)` middleware on all routes |
+| Password never returned | `password` field is stripped from all API responses |
+| CORS | Configured allowed origins |
+
+---
+
 ## Documentation
 - ARCHITECTURE.md
 - REDIS_SETUP.md
