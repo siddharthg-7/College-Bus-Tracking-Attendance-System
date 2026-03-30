@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { getInstance } = require('../services/database.service');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
+const bcrypt = require('bcryptjs');
 
 const db = getInstance();
 
@@ -308,6 +309,63 @@ router.get('/users', authenticate, authorize('admin'), (req, res, next) => {
         res.json({
             success: true,
             data: users
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/drivers
+ * Create a new driver account
+ */
+router.post('/drivers', authenticate, authorize('admin'), async (req, res, next) => {
+    try {
+        const { username, password, fullName, email, phone } = req.body;
+
+        if (!username || !password || !fullName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username, password and full name are required'
+            });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters'
+            });
+        }
+
+        // Check if username already exists
+        const existing = db.queryOne('SELECT id FROM users WHERE username = ?', [username]);
+        if (existing) {
+            return res.status(409).json({
+                success: false,
+                message: 'Username already exists'
+            });
+        }
+
+        // Hash the plaintext password with bcrypt (10 salt rounds) before storing.
+        // The original password cannot be recovered from the stored hash.
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const result = db.execute(
+            `INSERT INTO users (username, password, role, full_name, email, phone)
+             VALUES (?, ?, 'driver', ?, ?, ?)`,
+            [username, hashedPassword, fullName, email || null, phone || null]
+        );
+
+        res.status(201).json({
+            success: true,
+            data: {
+                id: result.lastInsertRowid,
+                username,
+                fullName,
+                email,
+                phone,
+                message: 'Driver created successfully'
+            }
         });
     } catch (error) {
         next(error);

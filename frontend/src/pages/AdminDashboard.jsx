@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { FaUserTie, FaBus, FaGraduationCap, FaCar, FaMap, FaTrafficLight, FaCheckCircle, FaClipboardList, FaChartBar, FaExclamationTriangle, FaClock, FaLock, FaRegFileAlt, FaHourglassHalf, FaPlayCircle, FaFlagCheckered, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUserTie, FaBus, FaGraduationCap, FaCar, FaMap, FaTrafficLight, FaCheckCircle, FaClipboardList, FaChartBar, FaExclamationTriangle, FaClock, FaLock, FaRegFileAlt, FaHourglassHalf, FaPlayCircle, FaFlagCheckered, FaMapMarkerAlt, FaPlus, FaTimes, FaIdCard } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import AdminMap from '../components/AdminMap';
@@ -23,8 +23,15 @@ function AdminDashboard() {
     const [buses, setBuses] = useState([]);
     const [logs, setLogs] = useState([]);
     const [analytics, setAnalytics] = useState(null);
+    const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
+
+    // Add driver modal state
+    const [showAddDriver, setShowAddDriver] = useState(false);
+    const [driverForm, setDriverForm] = useState({ username: '', password: '', fullName: '', email: '', phone: '' });
+    const [driverFormError, setDriverFormError] = useState('');
+    const [driverFormLoading, setDriverFormLoading] = useState(false);
 
     // Buffer WebSocket location updates that arrive before the initial API
     // response has populated the `buses` state.  After the API call resolves
@@ -101,11 +108,12 @@ function AdminDashboard() {
                 headers: { Authorization: `Bearer ${token}` }
             };
 
-            const [statsRes, busesRes, logsRes, analyticsRes] = await Promise.all([
+            const [statsRes, busesRes, logsRes, analyticsRes, driversRes] = await Promise.all([
                 axios.get('/api/admin/dashboard', config),
                 axios.get('/api/admin/buses', config),
                 axios.get('/api/admin/logs?limit=50', config),
-                axios.get('/api/admin/analytics', config)
+                axios.get('/api/admin/analytics', config),
+                axios.get('/api/admin/users?role=driver', config)
             ]);
 
             setStats(statsRes.data.data);
@@ -137,10 +145,57 @@ function AdminDashboard() {
 
             setLogs(logsRes.data.data);
             setAnalytics(analyticsRes.data.data);
+            setDrivers(driversRes.data.data);
             setLoading(false);
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
             setLoading(false);
+        }
+    };
+
+    const fetchDrivers = async () => {
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const res = await axios.get('/api/admin/users?role=driver', config);
+            setDrivers(res.data.data);
+        } catch (error) {
+            console.error('Failed to fetch drivers:', error);
+        }
+    };
+
+    const handleAddDriver = async (e) => {
+        e.preventDefault();
+        setDriverFormError('');
+        setDriverFormLoading(true);
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.post('/api/admin/drivers', {
+                username: driverForm.username,
+                password: driverForm.password,
+                fullName: driverForm.fullName,
+                email: driverForm.email,
+                phone: driverForm.phone
+            }, config);
+            setShowAddDriver(false);
+            setDriverForm({ username: '', password: '', fullName: '', email: '', phone: '' });
+            fetchDrivers();
+            // Refresh stats to update totalDrivers count
+            const statsRes = await axios.get('/api/admin/dashboard', config);
+            setStats(statsRes.data.data);
+        } catch (err) {
+            const status = err.response?.status;
+            const serverMsg = err.response?.data?.message;
+            if (serverMsg) {
+                setDriverFormError(serverMsg);
+            } else if (status === 409) {
+                setDriverFormError('Username already exists. Please choose a different username.');
+            } else if (status === 400) {
+                setDriverFormError('Please fill in all required fields correctly (password must be at least 6 characters).');
+            } else {
+                setDriverFormError('Failed to create driver. Please try again.');
+            }
+        } finally {
+            setDriverFormLoading(false);
         }
     };
 
@@ -283,6 +338,12 @@ function AdminDashboard() {
                             <FaBus /> Buses
                         </button>
                         <button
+                            className={`tab-btn ${activeTab === 'drivers' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('drivers')}
+                        >
+                            <FaIdCard /> Drivers
+                        </button>
+                        <button
                             className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
                             onClick={() => setActiveTab('logs')}
                         >
@@ -341,6 +402,132 @@ function AdminDashboard() {
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Drivers Tab */}
+                        {activeTab === 'drivers' && (
+                            <div className="drivers-section">
+                                <div className="section-header">
+                                    <h2 className="section-title">Bus Drivers</h2>
+                                    <button className="btn btn-primary" onClick={() => setShowAddDriver(true)}>
+                                        <FaPlus /> Add Driver
+                                    </button>
+                                </div>
+                                <div className="table-responsive">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Full Name</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Joined</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {drivers.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        No drivers found
+                                                    </td>
+                                                </tr>
+                                            ) : drivers.map((driver) => (
+                                                <tr key={driver.id}>
+                                                    <td><strong>{driver.username}</strong></td>
+                                                    <td>{driver.full_name}</td>
+                                                    <td>{driver.email || '—'}</td>
+                                                    <td>{driver.phone || '—'}</td>
+                                                    <td>{new Date(driver.created_at).toLocaleDateString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Add Driver Modal */}
+                                {showAddDriver && (
+                                    <div className="modal-overlay" onClick={() => setShowAddDriver(false)}>
+                                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                            <div className="modal-header">
+                                                <h3><FaIdCard /> Add New Driver</h3>
+                                                <button className="modal-close" onClick={() => setShowAddDriver(false)}>
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                            <form onSubmit={handleAddDriver} className="driver-form">
+                                                {driverFormError && (
+                                                    <div className="form-error">{driverFormError}</div>
+                                                )}
+                                                <div className="form-group">
+                                                    <label className="form-label">Full Name *</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-input"
+                                                        value={driverForm.fullName}
+                                                        onChange={(e) => setDriverForm({ ...driverForm, fullName: e.target.value })}
+                                                        placeholder="e.g. Rajesh Kumar"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Username *</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-input"
+                                                        value={driverForm.username}
+                                                        onChange={(e) => setDriverForm({ ...driverForm, username: e.target.value })}
+                                                        placeholder="e.g. driver6"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label" htmlFor="driver-password">Password *</label>
+                                                    <input
+                                                        id="driver-password"
+                                                        type="password"
+                                                        className="form-input"
+                                                        value={driverForm.password}
+                                                        onChange={(e) => setDriverForm({ ...driverForm, password: e.target.value })}
+                                                        placeholder="Minimum 6 characters"
+                                                        minLength={6}
+                                                        aria-describedby="driver-password-hint"
+                                                        required
+                                                    />
+                                                    <span id="driver-password-hint" className="form-hint">Must be at least 6 characters.</span>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        className="form-input"
+                                                        value={driverForm.email}
+                                                        onChange={(e) => setDriverForm({ ...driverForm, email: e.target.value })}
+                                                        placeholder="driver@college.edu"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-input"
+                                                        value={driverForm.phone}
+                                                        onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
+                                                        placeholder="e.g. 9876543210"
+                                                    />
+                                                </div>
+                                                <div className="form-actions">
+                                                    <button type="button" className="btn btn-secondary" onClick={() => setShowAddDriver(false)}>
+                                                        Cancel
+                                                    </button>
+                                                    <button type="submit" className="btn btn-primary" disabled={driverFormLoading}>
+                                                        {driverFormLoading ? 'Adding...' : 'Add Driver'}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
