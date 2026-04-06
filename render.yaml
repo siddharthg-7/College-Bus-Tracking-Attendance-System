@@ -7,7 +7,7 @@ services:
       npm install
       cd backend && npm install
       cd ../frontend && npm install && npm run build
-    startCommand: cd backend && node server.js
+    startCommand: cd backend && node scripts/initDatabase.js && node server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

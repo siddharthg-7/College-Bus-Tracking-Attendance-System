@@ -39,9 +39,9 @@ for (let i = 1; i <= 13; i++) {
     insertUser.run(`driver${i}`, hashedPassword, 'driver', `Driver ${i}`, `driver${i}@vnrvjiet.edu`, `90000000${i.toString().padStart(2, '0')}`);
 }
 
-// 30 Students
-for (let i = 1; i <= 30; i++) {
-    insertUser.run(`student${i}`, hashedPassword, 'student', `Student ${i}`, `student${i}@student.vnrvjiet.edu`, `80000000${i.toString().padStart(2, '0')}`);
+// 1300 Students
+for (let i = 1; i <= 1300; i++) {
+    insertUser.run(`student${i}`, hashedPassword, 'student', `Student ${i}`, `student${i}@student.vnrvjiet.edu`, `8${i.toString().padStart(9, '0')}`);
 }
 
 console.log('✅ Created users');
@@ -270,14 +270,19 @@ routesData.forEach(route => {
 });
 
 // Assign remaining students to random routes
-for (let i = studentIdx; i <= 30; i++) {
+for (let i = studentIdx; i <= 1300; i++) {
     const student = getStudentId.get(`student${i}`);
     const route = routesData[i % routesData.length];
     const stops = getStops.all(route.routeId);
-    const stop = stops[1] || stops[0];
+    
+    // Attempt to distribute across all stops (skip origin 0, take random to end)
+    const stopCount = stops.length;
+    const stopIndex = stopCount > 1 ? Math.floor(Math.random() * (stopCount - 1)) + 1 : 0;
+    const stop = stops[stopIndex];
+
     if (student && stop) {
         insertStudentStop.run(student.id, stop.id);
-        console.log(`📍 Assigned student${i} to ${route.routeId} (Stop ${stop.sequence_order})`);
+        // console.log(`📍 Assigned student${i} to ${route.routeId} (Stop ${stop.sequence_order})`); // Removed to prevent clutter in console
     }
 }
 
