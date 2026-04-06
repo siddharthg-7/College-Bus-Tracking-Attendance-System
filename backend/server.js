@@ -383,6 +383,17 @@ io.on('connection', (socket) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Port ${PORT} is already in use!`);
+        console.error(`   Run this to fix it: Get-Process -Name "node" | Stop-Process -Force`);
+        console.error(`   Then restart the server.\n`);
+        process.exit(1);
+    } else {
+        throw err;
+    }
+});
+
 server.listen(PORT, () => {
     console.log('\n🚀 ========================================');
     console.log(`   College Bus Tracker Backend`);
