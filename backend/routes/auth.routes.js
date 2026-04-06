@@ -30,7 +30,7 @@ router.post('/login', async (req, res, next) => {
             data: result
         });
     } catch (error) {
-        if (error.message === 'Invalid username or password') {
+        if (error.message === 'User not found' || error.message === 'Invalid password') {
             return res.status(401).json({
                 success: false,
                 message: error.message

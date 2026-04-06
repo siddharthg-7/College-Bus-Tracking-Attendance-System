@@ -18,6 +18,9 @@ class AuthService {
      * Authenticate user and generate JWT token
      */
     async login(username, password) {
+        console.log(`[AUTH DEBUG] Login attempt for username: ${username}`);
+        console.log(`[AUTH DEBUG] Request body password length: ${password ? password.length : 0}`);
+
         // Find user by username
         const user = this.db.queryOne(
             'SELECT * FROM users WHERE username = ?',
@@ -25,13 +28,18 @@ class AuthService {
         );
 
         if (!user) {
-            throw new Error('Invalid username or password');
+            console.log(`[AUTH DEBUG] DB Query Result: User '${username}' NOT FOUND in db`);
+            throw new Error('User not found');
+        } else {
+            console.log(`[AUTH DEBUG] DB Query Result: User found (ID: ${user.id}, Role: ${user.role})`);
         }
 
         // Verify password
         const isValidPassword = await bcrypt.compare(password, user.password);
+        console.log(`[AUTH DEBUG] Password Comparison Result: ${isValidPassword}`);
+        
         if (!isValidPassword) {
-            throw new Error('Invalid username or password');
+            throw new Error('Invalid password');
         }
 
         // Generate JWT token
