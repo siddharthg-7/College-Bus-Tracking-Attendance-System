@@ -15,6 +15,7 @@ const { authenticate } = require('../middleware/auth.middleware');
 router.post('/login', async (req, res, next) => {
     try {
         const { username, password } = req.body;
+        console.log("Login body:", req.body);
 
         if (!username || !password) {
             return res.status(400).json({
