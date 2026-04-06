@@ -7,6 +7,9 @@ export default defineConfig({
         react(),
         tailwindcss()
     ],
+    build: {
+        chunkSizeWarningLimit: 1000
+    },
     server: {
         host: true, // Listen on all network interfaces
         // https: true, // Handled by basicSsl plugin
