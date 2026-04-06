@@ -235,15 +235,22 @@ routesData.forEach(route => {
 console.log('✅ Created 13 routes and stops');
 
 // --- Buses (one per route, look up driver ID dynamically) ---
-const insertBus = db.prepare(`INSERT INTO buses (bus_number, route_id, driver_id, status) VALUES (?, ?, ?, ?)`);
+const insertBus = db.prepare(`INSERT INTO buses (bus_number, route_id, driver_id, status, current_lat, current_lng) VALUES (?, ?, ?, ?, ?, ?)`);
 const getDriverId = db.prepare(`SELECT id FROM users WHERE username = ?`);
+const insertMockTrip = db.prepare(`INSERT INTO trips (bus_id, driver_id, route_id, started_at, status) VALUES (?, ?, ?, CURRENT_TIMESTAMP, 'active')`);
+
 routesData.forEach((route, i) => {
     const driver = getDriverId.get(`driver${i + 1}`);
     if (!driver) { console.warn(`⚠️  driver${i + 1} not found, skipping bus for ${route.routeId}`); return; }
-    insertBus.run(`TS-08-VNR-${route.routeId}`, route.routeId, driver.id, 'idle');
+    
+    // Start bus at its first stop
+    const startStop = route.stops[0];
+    
+    const result = insertBus.run(`TS-08-VNR-${route.routeId}`, route.routeId, driver.id, 'active', startStop.lat, startStop.lng);
+    insertMockTrip.run(result.lastInsertRowid, driver.id, route.routeId);
 });
 
-console.log('✅ Created 13 buses assigned to routes');
+console.log('✅ Created 13 buses and automatically started mock trips for map presentation');
 
 // --- Assign students to stops (2–3 students per route, spread across stops) ---
 const insertStudentStop = db.prepare(`INSERT OR IGNORE INTO student_stops (student_id, stop_id) VALUES (?, ?)`);
