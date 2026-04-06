@@ -146,12 +146,13 @@ class DatabaseService {
             );
         `);
 
-        // OPTION 1 - Ensure fallback data exists if production DB starts completely blank
+        // OPTION 1 - Ensure fallback data exists if production DB starts completely blank or is partially corrupted
         try {
-            const userExists = this.db.prepare("SELECT id FROM users WHERE username = ?").get("student1");
+            const userCount = this.db.prepare("SELECT COUNT(*) as count FROM users").get().count;
             
-            if (!userExists) {
-                console.log("Empty database detected! Executing master seed script...");
+            // If the database has fewer than 1000 users, it must not have been seeded completely!
+            if (userCount < 1000) {
+                console.log(`[SEED CHECK] Database has only ${userCount} users. Executing master seed script to populate drivers and students correctly...`);
                 
                 const { execSync } = require('child_process');
                 execSync('node scripts/seedData.js', { 
@@ -160,6 +161,8 @@ class DatabaseService {
                 });
                 
                 console.log("✅ Render automated database seeding complete!");
+            } else {
+                console.log(`[SEED CHECK] Database correctly populated with ${userCount} users.`);
             }
         } catch (e) {
             console.error("Failed to seed fallback data:", e);
