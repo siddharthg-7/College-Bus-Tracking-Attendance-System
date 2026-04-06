@@ -146,23 +146,23 @@ class DatabaseService {
             );
         `);
 
-        // OPTION 1 - Ensure fallback users exist if production DB starts completely blank
+        // OPTION 1 - Ensure fallback data exists if production DB starts completely blank
         try {
             const userExists = this.db.prepare("SELECT id FROM users WHERE username = ?").get("student1");
             
             if (!userExists) {
-                const bcrypt = require('bcryptjs');
-                const hashedPass = bcrypt.hashSync("password123", 10);
+                console.log("Empty database detected! Executing master seed script...");
                 
-                this.db.prepare(`
-                    INSERT INTO users (username, password, role, full_name, email, phone)
-                    VALUES (?, ?, 'student', 'Default Student 1', 'student1@vnrvjiet.edu', '8000000001')
-                `).run("student1", hashedPass);
+                const { execSync } = require('child_process');
+                execSync('node scripts/seedData.js', { 
+                    cwd: path.join(__dirname, '..'), 
+                    stdio: 'inherit' 
+                });
                 
-                console.log("✅ Default fallback 'student1' user magically created!");
+                console.log("✅ Render automated database seeding complete!");
             }
         } catch (e) {
-            console.error("Failed to seed fallback user:", e);
+            console.error("Failed to seed fallback data:", e);
         }
     }
 
