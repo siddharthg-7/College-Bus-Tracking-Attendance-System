@@ -145,6 +145,25 @@ class DatabaseService {
                 FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
             );
         `);
+
+        // OPTION 1 - Ensure fallback users exist if production DB starts completely blank
+        try {
+            const userExists = this.db.prepare("SELECT id FROM users WHERE username = ?").get("student1");
+            
+            if (!userExists) {
+                const bcrypt = require('bcryptjs');
+                const hashedPass = bcrypt.hashSync("password123", 10);
+                
+                this.db.prepare(`
+                    INSERT INTO users (username, password, role, full_name, email, phone)
+                    VALUES (?, ?, 'student', 'Default Student 1', 'student1@vnrvjiet.edu', '8000000001')
+                `).run("student1", hashedPass);
+                
+                console.log("✅ Default fallback 'student1' user magically created!");
+            }
+        } catch (e) {
+            console.error("Failed to seed fallback user:", e);
+        }
     }
 
     /**

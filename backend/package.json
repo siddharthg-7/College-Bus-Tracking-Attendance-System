@@ -4,7 +4,7 @@
     "description": "Backend for College Bus Tracking & Attendance System",
     "main": "server.js",
     "scripts": {
-        "start": "node scripts/initDatabase.js && node server.js",
+        "start": "node scripts/initDatabase.js && node scripts/seedData.js && node server.js",
         "dev": "nodemon server.js",
         "init-db": "node scripts/initDatabase.js",
         "seed": "node scripts/seedData.js"
